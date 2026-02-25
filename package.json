@@ -1,0 +1,16 @@
+{
+  "name": "coworking-space",
+  "version": "1.0.0",
+  "description": "Co-working space welcome page with Neon PostgreSQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

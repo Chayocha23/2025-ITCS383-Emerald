@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Your SpaceHub dashboard — manage your co-working space account.">
+    <title>Dashboard — SpaceHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <!-- Dashboard Nav -->
+        <nav class="dashboard__nav">
+            <a href="index.html" class="dashboard__nav-logo">
+                <div class="navbar__logo-icon" style="width:32px;height:32px;font-size:0.9rem;">⬡</div>
+                SpaceHub
+            </a>
+            <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard__content">
+            <div class="dashboard__welcome">
+                <h1 id="welcomeName">Welcome back!</h1>
+                <p>Here's your membership information at a glance.</p>
+            </div>
+
+            <div class="dashboard__info-grid">
+                <div class="info-card">
+                    <div class="info-card__label">Full Name</div>
+                    <div class="info-card__value" id="infoName">—</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card__label">Email</div>
+                    <div class="info-card__value" id="infoEmail">—</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card__label">Phone</div>
+                    <div class="info-card__value" id="infoPhone">—</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card__label">Address</div>
+                    <div class="info-card__value" id="infoAddress">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        const userData = sessionStorage.getItem('user');
+        if (!userData) {
+            window.location.href = 'login.html';
+        } else {
+            const user = JSON.parse(userData);
+            document.getElementById('welcomeName').textContent = `Welcome back, ${user.firstName}!`;
+            document.getElementById('infoName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('infoEmail').textContent = user.email;
+            document.getElementById('infoPhone').textContent = user.phone;
+            document.getElementById('infoAddress').textContent = user.address;
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+
+</body>
+
+</html>

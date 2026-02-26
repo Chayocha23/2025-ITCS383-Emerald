@@ -35,7 +35,7 @@ jobs:
         run: npm run lint
 
       - name: Build Docker image (test)
-        run: docker build -t ${{ env.IMAGE_NAME }}:test .
+        run: docker build -t $(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]'):test .
 
   # ─────────────────────────────────────
   # CD — Push to GHCR & Deploy to Render

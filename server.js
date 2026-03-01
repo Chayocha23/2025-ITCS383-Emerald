@@ -4,25 +4,9 @@ const { neon } = require('@neondatabase/serverless');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure Multer for local storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure Multer for memory storage (store as buffer before DB)
+const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -99,6 +83,7 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;
+
 
     console.log('✅ Database initialized — all tables ready');
   } catch (err) {
@@ -333,7 +318,9 @@ app.post('/api/admin/rooms', upload.single('image'), async (req, res) => {
     let imageUrl = req.body.imageUrl || '';
 
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      // Convert buffer to Base64 data URL
+      const base64Image = req.file.buffer.toString('base64');
+      imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
     }
 
     if (!name || !type || !capacity || pricePerHour === undefined) {
@@ -361,7 +348,9 @@ app.put('/api/admin/rooms/:id', upload.single('image'), async (req, res) => {
     let imageUrl = req.body.imageUrl;
 
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      // Convert buffer to Base64 data URL
+      const base64Image = req.file.buffer.toString('base64');
+      imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
     }
 
     if (!name || !type || !capacity || pricePerHour === undefined) {
@@ -387,6 +376,7 @@ app.put('/api/admin/rooms/:id', upload.single('image'), async (req, res) => {
     res.status(500).json({ error: 'Server error.' });
   }
 });
+
 
 // Start server
 initDB().then(() => {

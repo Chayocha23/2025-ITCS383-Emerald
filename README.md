@@ -4,12 +4,13 @@
 
 A modern welcome page and account management system for a co-working space, built with **HTML, CSS, JavaScript**, **Node.js/Express**, and **Neon PostgreSQL**. Deployed automatically via **GitHub Actions + Docker + Render**.
 
-## Features
-
 - 🎨 **Blue & White Theme** — modern design with glassmorphism and gradient effects
+- 👤 **Role-Based Access** — distinct roles for `user` and `admin` with protected routes
+- 📊 **User Dashboard** — manage membership and deposits
+- 🛠️ **Admin Dashboard** — add and edit rooms via a sleek management interface
+- 📸 **Local Image Uploads** — admins can upload room images directly (stored in `public/uploads`)
 - 📝 **Account Registration** — First Name, Last Name, Email, Phone Number, Address, Password
 - 🔐 **Secure Login** — bcrypt password hashing
-- 📊 **User Dashboard** — displays member information after login
 - 🗄️ **Neon PostgreSQL** — serverless database for persistent storage
 - 🐳 **Docker** — containerized with multi-stage Alpine build
 - 🚀 **CI/CD** — GitHub Actions → GHCR → Render auto-deploy
@@ -26,6 +27,8 @@ A modern welcome page and account management system for a co-working space, buil
 | Registry   | GitHub Container Registry     |
 | CI/CD      | GitHub Actions                |
 | Hosting    | Render                        |
+| Storage    | Local (public/uploads)        |
+| File Upload| Multer                        |
 
 ## Project Structure
 
@@ -37,6 +40,8 @@ A modern welcome page and account management system for a co-working space, buil
 │   ├── login.html       # Sign in page
 │   ├── register.html    # Create account page
 │   ├── dashboard.html   # User dashboard (post-login)
+│   ├── admin.html       # Admin room management dashboard
+│   ├── uploads/         # Local folder for uploaded room images (gitignored)
 │   ├── style.css        # Blue & white design system
 │   └── app.js           # Shared frontend utilities
 ├── server.js            # Express server + API endpoints
@@ -97,10 +102,13 @@ docker run -p 3000:3000 -e DATABASE_URL="your_neon_connection_string" 2025-itcs3
 
 ## API Endpoints
 
-| Method | Endpoint         | Description              |
-|--------|------------------|--------------------------|
-| POST   | `/api/register`  | Create a new account     |
-| POST   | `/api/login`     | Authenticate a user      |
+| Method | Endpoint             | Description                       |
+|--------|----------------------|-----------------------------------|
+| POST   | `/api/register`      | Create a new account              |
+| POST   | `/api/login`         | Authenticate a user & get role    |
+| POST   | `/api/admin/rooms`   | (Admin Only) Create a new room    |
+| PUT    | `/api/admin/rooms/:id`| (Admin Only) Update existing room |
+| GET    | `/api/rooms`         | List all co-working spaces        |
 
 ## CI/CD Pipeline
 

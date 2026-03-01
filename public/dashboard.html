@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Your SpaceHub dashboard — manage your co-working space account.">
+    <meta name="description" content="Your SpaceHub dashboard — manage your co-working space membership.">
     <title>Dashboard — SpaceHub</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,55 +18,346 @@
                 <div class="navbar__logo-icon" style="width:32px;height:32px;font-size:0.9rem;">⬡</div>
                 SpaceHub
             </a>
-            <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+            <div class="profile-menu">
+                <button class="profile-menu__avatar" id="profileToggle" onclick="toggleProfileMenu()">
+                    <span id="avatarInitial">U</span>
+                </button>
+                <div class="profile-menu__dropdown" id="profileDropdown">
+                    <a href="profile.html" class="profile-menu__item">
+                        <span class="profile-menu__item-icon">👤</span> Profile
+                    </a>
+                    <button class="profile-menu__item profile-menu__item--danger" onclick="handleLogout()">
+                        <span class="profile-menu__item-icon">🚪</span> Sign Out
+                    </button>
+                </div>
+            </div>
         </nav>
 
         <!-- Dashboard Content -->
         <div class="dashboard__content">
             <div class="dashboard__welcome">
-                <h1 id="welcomeName">Welcome back!!</h1>
+                <h1 id="welcomeName">Welcome back!</h1>
                 <p>Here's your membership information at a glance.</p>
             </div>
 
-            <div class="dashboard__info-grid">
-                <div class="info-card">
-                    <div class="info-card__label">Full Name</div>
-                    <div class="info-card__value" id="infoName">—</div>
+            <!-- Membership Status Card -->
+            <div class="membership-status" id="membershipStatus">
+                <div class="membership-status__header">
+                    <h2>Membership Status</h2>
+                    <span class="membership-status__badge" id="statusBadge">No Membership</span>
                 </div>
-                <div class="info-card">
-                    <div class="info-card__label">Email</div>
-                    <div class="info-card__value" id="infoEmail">—</div>
+                <div class="membership-status__details" id="membershipDetails">
+                    <p class="membership-status__none">You don't have an active membership yet. Apply below to get
+                        started!</p>
                 </div>
-                <div class="info-card">
-                    <div class="info-card__label">Phone</div>
-                    <div class="info-card__value" id="infoPhone">—</div>
+            </div>
+
+            <!-- Apply for Membership -->
+            <div class="membership-apply" id="applySection">
+                <h2 class="membership-apply__title">Apply for Membership</h2>
+                <p class="membership-apply__desc">Select your preferred membership type and duration.</p>
+
+                <!-- Type Selector -->
+                <div class="type-selector">
+                    <button class="type-selector__btn active" data-type="day" onclick="selectType('day')">
+                        <div class="type-selector__icon">📅</div>
+                        <div class="type-selector__label">Per Day</div>
+                        <div class="type-selector__price">฿15<span>/day</span></div>
+                    </button>
+                    <button class="type-selector__btn" data-type="month" onclick="selectType('month')">
+                        <div class="type-selector__icon">📆</div>
+                        <div class="type-selector__label">Per Month</div>
+                        <div class="type-selector__price">฿299<span>/mo</span></div>
+                    </button>
+                    <button class="type-selector__btn" data-type="year" onclick="selectType('year')">
+                        <div class="type-selector__icon">🗓️</div>
+                        <div class="type-selector__label">Per Year</div>
+                        <div class="type-selector__price">฿2,999<span>/yr</span></div>
+                    </button>
                 </div>
-                <div class="info-card">
-                    <div class="info-card__label">Address</div>
-                    <div class="info-card__value" id="infoAddress">—</div>
+
+                <!-- Duration Picker -->
+                <div class="duration-picker">
+                    <label for="duration">Duration</label>
+                    <div class="duration-picker__row">
+                        <button class="duration-picker__btn" onclick="changeDuration(-1)">−</button>
+                        <input type="number" id="duration" value="1" min="1" max="12" onchange="updatePrice()">
+                        <button class="duration-picker__btn" onclick="changeDuration(1)">+</button>
+                        <span class="duration-picker__unit" id="durationUnit">day(s)</span>
+                    </div>
                 </div>
+
+                <!-- Price Summary -->
+                <div class="price-summary">
+                    <div class="price-summary__row">
+                        <span>Unit Price</span>
+                        <span id="unitPrice">฿15</span>
+                    </div>
+                    <div class="price-summary__row">
+                        <span>Duration</span>
+                        <span id="durationSummary">1 day(s)</span>
+                    </div>
+                    <div class="price-summary__row price-summary__total">
+                        <span>Total</span>
+                        <span id="totalPrice">฿15</span>
+                    </div>
+                </div>
+
+                <button class="btn-apply" id="applyBtn" onclick="handleApply()">Apply for Membership</button>
+            </div>
+
+            <!-- Deposit Section (shown only when membership active) -->
+            <div class="deposit-section" id="depositSection" style="display:none;">
+                <h2 class="deposit-section__title">Make a Deposit</h2>
+                <p class="deposit-section__desc">Add funds to your account for co-working space usage.</p>
+                <div class="deposit-section__form">
+                    <div class="form-group">
+                        <label for="depositAmount">Amount (฿)</label>
+                        <input type="number" id="depositAmount" placeholder="Enter amount" min="1" step="0.01">
+                    </div>
+                    <button class="btn-apply" onclick="handleDeposit()">Make Deposit</button>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="payment-history" id="paymentHistory" style="display:none;">
+                <h2 class="payment-history__title">Payment History</h2>
+                <div class="payment-history__list" id="paymentList"></div>
             </div>
         </div>
     </div>
 
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
     <script>
-        // Check if user is logged in
+        // ── State ──
+        let currentUser = null;
+        let currentMembership = null;
+        let selectedType = 'day';
+        const PRICING = { day: 15, month: 299, year: 2999 };
+        const UNIT_LABELS = { day: 'day(s)', month: 'month(s)', year: 'year(s)' };
+
+        // ── Auth Check ──
         const userData = sessionStorage.getItem('user');
         if (!userData) {
             window.location.href = 'login.html';
         } else {
-            const user = JSON.parse(userData);
-            document.getElementById('welcomeName').textContent = `Welcome back, ${user.firstName}!`;
-            document.getElementById('infoName').textContent = `${user.firstName} ${user.lastName}`;
-            document.getElementById('infoEmail').textContent = user.email;
-            document.getElementById('infoPhone').textContent = user.phone;
-            document.getElementById('infoAddress').textContent = user.address;
+            currentUser = JSON.parse(userData);
+            document.getElementById('welcomeName').textContent = `Welcome back, ${currentUser.firstName}!`;
+            document.getElementById('avatarInitial').textContent = currentUser.firstName.charAt(0).toUpperCase();
+            loadMembership();
         }
 
+        // ── Load membership from server ──
+        async function loadMembership() {
+            try {
+                const res = await fetch(`/api/membership/${currentUser.id}`);
+                const data = await res.json();
+
+                if (data.membership) {
+                    currentMembership = data.membership;
+                    const isActive = data.membership.status === 'active' &&
+                        new Date(data.membership.end_date) >= new Date();
+                    renderMembershipStatus(data.membership, isActive);
+
+                    if (isActive) {
+                        document.getElementById('applySection').style.display = 'none';
+                        document.getElementById('depositSection').style.display = 'block';
+                    }
+                }
+
+                if (data.payments && data.payments.length > 0) {
+                    renderPaymentHistory(data.payments);
+                }
+            } catch (err) {
+                console.error('Failed to load membership:', err);
+            }
+        }
+
+        // ── Render membership status ──
+        function renderMembershipStatus(membership, isActive) {
+            const badge = document.getElementById('statusBadge');
+            const details = document.getElementById('membershipDetails');
+
+            if (isActive) {
+                badge.textContent = 'Active';
+                badge.className = 'membership-status__badge membership-status__badge--active';
+            } else {
+                badge.textContent = 'Expired';
+                badge.className = 'membership-status__badge membership-status__badge--expired';
+            }
+
+            const typeLabel = membership.type.charAt(0).toUpperCase() + membership.type.slice(1);
+            const startDate = new Date(membership.start_date).toLocaleDateString();
+            const endDate = new Date(membership.end_date).toLocaleDateString();
+
+            details.innerHTML = `
+                <div class="membership-status__grid">
+                    <div class="membership-status__item">
+                        <span class="membership-status__item-label">Type</span>
+                        <span class="membership-status__item-value">Per ${typeLabel}</span>
+                    </div>
+                    <div class="membership-status__item">
+                        <span class="membership-status__item-label">Duration</span>
+                        <span class="membership-status__item-value">${membership.duration} ${UNIT_LABELS[membership.type]}</span>
+                    </div>
+                    <div class="membership-status__item">
+                        <span class="membership-status__item-label">Start Date</span>
+                        <span class="membership-status__item-value">${startDate}</span>
+                    </div>
+                    <div class="membership-status__item">
+                        <span class="membership-status__item-label">End Date</span>
+                        <span class="membership-status__item-value">${endDate}</span>
+                    </div>
+                    <div class="membership-status__item">
+                        <span class="membership-status__item-label">Price Paid</span>
+                        <span class="membership-status__item-value">฿${Number(membership.price_paid).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Render payment history ──
+        function renderPaymentHistory(payments) {
+            const container = document.getElementById('paymentHistory');
+            const list = document.getElementById('paymentList');
+            container.style.display = 'block';
+
+            list.innerHTML = payments.map(p => `
+                <div class="payment-item">
+                    <div class="payment-item__info">
+                        <span class="payment-item__type">${p.payment_type === 'subscription' ? '💳 Subscription' : '💰 Deposit'}</span>
+                        <span class="payment-item__date">${new Date(p.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <span class="payment-item__amount">฿${Number(p.amount).toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        // ── Type selector ──
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-selector__btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            document.getElementById('duration').value = 1;
+            updatePrice();
+        }
+
+        // ── Duration controls ──
+        function changeDuration(delta) {
+            const input = document.getElementById('duration');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            if (selectedType === 'month' && val > 12) val = 12;
+            if (selectedType === 'year' && val > 5) val = 5;
+            if (selectedType === 'day' && val > 365) val = 365;
+            input.value = val;
+            updatePrice();
+        }
+
+        function updatePrice() {
+            const duration = parseInt(document.getElementById('duration').value) || 1;
+            const unitPrice = PRICING[selectedType];
+            const total = unitPrice * duration;
+
+            document.getElementById('unitPrice').textContent = `฿${unitPrice.toLocaleString()}`;
+            document.getElementById('durationUnit').textContent = UNIT_LABELS[selectedType];
+            document.getElementById('durationSummary').textContent = `${duration} ${UNIT_LABELS[selectedType]}`;
+            document.getElementById('totalPrice').textContent = `฿${total.toLocaleString()}`;
+        }
+
+        // ── Apply for membership ──
+        async function handleApply() {
+            const btn = document.getElementById('applyBtn');
+            btn.classList.add('loading');
+            btn.textContent = 'Processing...';
+
+            const duration = parseInt(document.getElementById('duration').value) || 1;
+
+            try {
+                const res = await fetch('/api/membership', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        type: selectedType,
+                        duration
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showToast(data.error, 'error');
+                    btn.classList.remove('loading');
+                    btn.textContent = 'Apply for Membership';
+                    return;
+                }
+
+                showToast('Membership activated! 🎉', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                showToast('Connection error. Please try again.', 'error');
+                btn.classList.remove('loading');
+                btn.textContent = 'Apply for Membership';
+            }
+        }
+
+        // ── Deposit ──
+        async function handleDeposit() {
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            if (!amount || amount <= 0) {
+                showToast('Please enter a valid amount.', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        membershipId: currentMembership ? currentMembership.id : null,
+                        amount
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showToast(data.error, 'error');
+                    return;
+                }
+
+                showToast(`Deposit of ฿${amount.toLocaleString()} recorded!`, 'success');
+                document.getElementById('depositAmount').value = '';
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                showToast('Connection error. Please try again.', 'error');
+            }
+        }
+
+        // ── Logout ──
         function handleLogout() {
             sessionStorage.removeItem('user');
             window.location.href = 'index.html';
         }
+
+        // ── Profile Menu ──
+        function toggleProfileMenu() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.querySelector('.profile-menu');
+            if (!menu.contains(e.target)) {
+                document.getElementById('profileDropdown').classList.remove('show');
+            }
+        });
     </script>
 
 </body>

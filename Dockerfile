@@ -22,8 +22,8 @@ COPY package*.json ./
 COPY server.js ./
 COPY public ./public
 
-# Set ownership
-RUN chown -R appuser:appgroup /app
+# Ensure uploads directory exists and has correct permissions
+RUN mkdir -p /app/public/uploads && chown -R appuser:appgroup /app
 
 USER appuser
 

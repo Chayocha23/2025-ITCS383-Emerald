@@ -115,16 +115,62 @@
 
 ---
 
+## 5. Admin Dashboard & Local Image Uploads
+
+**Prompt:**
+> "design admin page like dashboard"  
+> "I want to have button for add room and have modal form to add detail"  
+> "make it image input by local"
+
+**What was generated:**
+- `public/admin.html` — A new administrative interface matching the dashboard design.
+- Modal-based room creation and editing forms.
+- Multer configuration in `server.js` for handling file uploads to `public/uploads`.
+- Updated `Dockerfile` to ensure the `uploads` directory exists and has correct permissions.
+
+**Accepted:** The admin UI, modal logic, and local file storage strategy were accepted. Providing a way to manage rooms directly in the app significantly improved administrative workflow.
+
+**Rejected:** An initial attempt used remote image URLs. This was rejected in favor of local file uploads for better reliability and control.
+
+**Verification:**
+- Logged in with admin credentials (`admin@spacehub.co`).
+- Verified that the "Add New Room" modal allows file selection.
+- Confirmed that uploaded images appear correctly in the `public/uploads` directory and are displayed in the room listing.
+- Verified that editing a room updates the database correctly.
+
+---
+
+## 6. Room Reservation Feature (Implemented & Removed)
+
+**Prompt:**
+> "make the room reservation feature in dashboard for user to reserve the room"
+
+**What was generated:**
+- New `reservations` table and associated API routes.
+- Booking modal on `dashboard.html` with real-time price calculation and conflict detection.
+
+**Accepted:** The initial implementation was technically correct and functional.
+
+**Rejected:** After review, the team decided to **remove** the Room Reservation feature to keep the scope focused on core membership and room management.
+
+**Verification:**
+- Verified all reservation-related code blocks were removed from `server.js` and `dashboard.html`.
+- Confirmed the dashboard correctly restored the "Payment History" section after feature removal.
+
+---
+
 ## Summary Table
 
-| Change                      | AI-Generated | Accepted | Rejected / Modified          | Verification Method                              |
-|-----------------------------|:------------:|:--------:|------------------------------|--------------------------------------------------|
-| Welcome page + CSS theme    | ✅           | ✅       | —                            | Browser visual inspection, field checklist        |
-| Login & Register pages      | ✅           | ✅       | —                            | Browser testing, form submission                  |
-| Express + Neon backend      | ✅           | ✅       | localStorage → Neon DB       | `npm start`, API testing, Neon dashboard check    |
-| Dockerfile                  | ✅           | ✅       | —                            | Manual code review, non-root & healthcheck        |
-| GitHub Actions workflow.yml | ✅           | ✅       | Docker tag lowercase fix     | `npm run lint`, CI/CD pipeline run on GitHub      |
-| render.yaml                 | ✅           | ❌       | Removed (redundant)          | N/A                                               |
-| Render Auto-Deploy config   | ✅           | ✅       | Changed to Off               | Verified deploy only triggers via hook            |
-| README.md                   | ✅           | ✅       | —                            | Manual review of content accuracy                 |
-| AI_USAGE_LOG.md             | ✅           | ✅       | —                            | Manual review against actual conversation history |
+| Change                        | AI-Generated | Accepted | Rejected / Modified            | Verification Method                               |
+|-------------------------------|:------------:|:--------:|--------------------------------|---------------------------------------------------|
+| Welcome page + CSS theme      | ✅           | ✅       | —                              | Browser visual inspection, field checklist         |
+| Login & Register pages        | ✅           | ✅       | —                              | Browser testing, form submission                   |
+| Express + Neon backend        | ✅           | ✅       | localStorage → Neon DB         | `npm start`, API testing, Neon dashboard check     |
+| Dockerfile                    | ✅           | ✅       | Updated for `uploads` perms    | Manual code review, non-root & healthcheck         |
+| GitHub Actions workflow.yml   | ✅           | ✅       | Docker tag lowercase fix       | `npm run lint`, CI/CD pipeline run on GitHub       |
+| Admin Dashboard (`admin.html`)| ✅           | ✅       | —                              | Admin login, CRUD testing for rooms                |
+| Local Image Upload (`multer`) | ✅           | ✅       | Remote URL → Local File        | Uploaded test image, verified file path existence  |
+| Room Reservation Feature      | ✅           | ❌       | **Implemented then Removed**   | Code review, functionality removal verification   |
+| render.yaml                   | ✅           | ❌       | Removed (redundant)            | N/A                                                |
+| Render Auto-Deploy config     | ✅           | ✅       | Changed to Off                 | Verified deploy only triggers via hook             |
+| README.md & AI Usage Log      | ✅           | ✅       | —                              | Manual review of content accuracy                 |

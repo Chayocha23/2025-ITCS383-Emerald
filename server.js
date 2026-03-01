@@ -3,6 +3,30 @@ const express = require('express');
 const { neon } = require('@neondatabase/serverless');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure Multer for local storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +57,20 @@ async function initDB() {
         phone VARCHAR(20) NOT NULL,
         address TEXT NOT NULL,
         password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        capacity INTEGER NOT NULL,
+        description TEXT,
+        price_per_hour DECIMAL(10,2) NOT NULL,
+        image_url TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;
@@ -130,7 +168,8 @@ app.post('/api/login', async (req, res) => {
         lastName: user.last_name,
         email: user.email,
         phone: user.phone,
-        address: user.address
+        address: user.address,
+        role: user.role
       }
     });
   } catch (err) {
@@ -270,6 +309,83 @@ app.post('/api/payment', async (req, res) => {
 // GET /api/pricing — Return pricing info
 app.get('/api/pricing', (req, res) => {
   res.json(PRICING);
+});
+
+// ──────────────────────────────────────────────
+// Room Routes (Admin & Public)
+// ──────────────────────────────────────────────
+
+// GET /api/rooms — Fetch all rooms
+app.get('/api/rooms', async (req, res) => {
+  try {
+    const rooms = await sql`SELECT * FROM rooms ORDER BY created_at DESC`;
+    res.json(rooms);
+  } catch (err) {
+    console.error('Get rooms error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// POST /api/admin/rooms — Create a room (Admin only with image upload)
+app.post('/api/admin/rooms', upload.single('image'), async (req, res) => {
+  try {
+    const { name, type, capacity, description, pricePerHour } = req.body;
+    let imageUrl = req.body.imageUrl || '';
+
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    if (!name || !type || !capacity || pricePerHour === undefined) {
+      return res.status(400).json({ error: 'Missing required fields.' });
+    }
+
+    const room = await sql`
+      INSERT INTO rooms (name, type, capacity, description, price_per_hour, image_url)
+      VALUES (${name}, ${type}, ${Number(capacity)}, ${description}, ${Number(pricePerHour)}, ${imageUrl})
+      RETURNING *
+    `;
+
+    res.status(201).json({ message: 'Room created successfully!', room: room[0] });
+  } catch (err) {
+    console.error('Create room error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// PUT /api/admin/rooms/:id — Update a room (Admin only with optional image upload)
+app.put('/api/admin/rooms/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, capacity, description, pricePerHour } = req.body;
+    let imageUrl = req.body.imageUrl;
+
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    if (!name || !type || !capacity || pricePerHour === undefined) {
+      return res.status(400).json({ error: 'Missing required fields.' });
+    }
+
+    const room = await sql`
+      UPDATE rooms 
+      SET name = ${name}, type = ${type}, capacity = ${Number(capacity)}, 
+          description = ${description}, price_per_hour = ${Number(pricePerHour)}, 
+          image_url = ${imageUrl === undefined ? sql`image_url` : imageUrl}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (room.length === 0) {
+      return res.status(404).json({ error: 'Room not found.' });
+    }
+
+    res.json({ message: 'Room updated successfully!', room: room[0] });
+  } catch (err) {
+    console.error('Update room error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
 });
 
 // Start server

@@ -22,7 +22,7 @@ COPY package*.json ./
 COPY server.js ./
 COPY public ./public
 
-# Set ownership
+# Ensure application files have correct permissions
 RUN chown -R appuser:appgroup /app
 
 USER appuser

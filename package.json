@@ -7,7 +7,14 @@
     "start": "node server.js",
     "dev": "node server.js",
     "lint": "node --check server.js",
-    "test": "jest"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "coverageReporters": [
+      "lcov",
+      "text-summary"
+    ]
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

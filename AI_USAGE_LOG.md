@@ -437,6 +437,24 @@
 
 ---
 
+## 16. Developing Jest Unit Test Suites
+
+**AI Tool Used:** Gemini (via Antigravity coding assistant)
+
+**Task:** Create meaningful unit tests with explicit input/output reasoning to validate the API behaviour and Encryption logic.
+
+**AI Suggestions & Actions Taken:**
+- Installed `jest` and `supertest` to local `devDependencies`.
+- Created `lib/crypto.test.js` covering AES-256-GCM logic, boundary checks, empty array handles, and legacy `aes-256-cbc` backward compatibility.
+- Refactored `server.js`'s end-of-file listener to cleanly export the express `app` context for unit tests.
+- Designed `server.test.js` containing mocked PostgreSQL transactions using `jest.mock`.
+- Wrote extensive end-to-end API tests specifically mapping the logical constraints of the Membership, Authentications, and Booking endpoints, verifying edge cases like double-purchasing and over-booking. 
+
+**Verification:**
+- Ran `npm test`. All test scripts ran identically, evaluating to 100% test-pass rate across 16 metrics.
+
+---
+
 ## Summary Table
 
 | Change                      | AI Tool      | AI-Generated | Accepted | Rejected / Modified          | Verification Method                              |

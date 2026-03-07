@@ -142,6 +142,15 @@ docker run -p 3000:3000 \
   2025-itcs383-emerald
 ```
 
+## Testing
+
+The project is configured with a robust test suite powered by **Jest** and **Supertest** to evaluate core business logic and database transaction pathways without mutating production data.
+
+Run all unit and integration API tests locally:
+```bash
+npm test
+```
+
 ## API Endpoints
 
 ### Authentication

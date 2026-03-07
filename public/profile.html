@@ -77,12 +77,8 @@
 
     <script src="app.js"></script>
     <script>
-        // Auth check
-        const userData = sessionStorage.getItem('user');
-        if (!userData) {
-            window.location.href = 'login.html';
-        } else {
-            const user = JSON.parse(userData);
+        const user = requireAuth(['customer', 'employee', 'manager']);
+        if (user) {
             document.getElementById('avatarInitial').textContent = user.firstName.charAt(0).toUpperCase();
             document.getElementById('profileAvatar').textContent = user.firstName.charAt(0).toUpperCase();
             document.getElementById('profileFullName').textContent = `${user.firstName} ${user.lastName}`;
@@ -93,22 +89,6 @@
             document.getElementById('infoPhone').textContent = user.phone;
             document.getElementById('infoAddress').textContent = user.address;
         }
-
-        function handleLogout() {
-            sessionStorage.removeItem('user');
-            window.location.href = 'index.html';
-        }
-
-        function toggleProfileMenu() {
-            document.getElementById('profileDropdown').classList.toggle('show');
-        }
-
-        document.addEventListener('click', (e) => {
-            const menu = document.querySelector('.profile-menu');
-            if (!menu.contains(e.target)) {
-                document.getElementById('profileDropdown').classList.remove('show');
-            }
-        });
     </script>
 
 </body>

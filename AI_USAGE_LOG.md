@@ -366,6 +366,38 @@
 
 ---
 
+## 13. Dockerfile Fix & Deployment Troubleshooting
+
+**AI Tool Used:** Gemini (via Antigravity coding assistant)
+
+**Issues encountered and resolved:**
+
+### Missing `lib/` Directory in Docker Image
+- **Problem:** The Dockerfile did not include `COPY lib ./lib`, causing `lib/auth.js`, `lib/crypto.js`, and `lib/expiry.js` to be missing from the deployed container, resulting in `MODULE_NOT_FOUND` errors.
+- **AI suggestion:** Add `COPY lib ./lib` to the Dockerfile between `COPY server.js` and `COPY public`.
+- **Accepted:** Fix applied to `Dockerfile`.
+
+### Missing `ENCRYPTION_KEY` Environment Variable
+- **Problem:** Render deployment failed with `ENCRYPTION_KEY must be a 64-character hex string in .env` because the environment variable was not configured in Render.
+- **AI suggestion:** Generate a key via `openssl rand -hex 32` and add it to both `.env` (local) and Render Dashboard (production).
+- **Accepted:** Key generated and added to both environments.
+
+### Duplicate Key Constraint on Database Seed
+- **Problem:** After adding `ENCRYPTION_KEY`, the deploy failed with `duplicate key value violates unique constraint "users_email_key"` because the database already had stale data from previous deploys with a different encryption key.
+- **AI suggestions:** Three options were presented:
+  1. Delete the conflicting user from Neon
+  2. Reset the entire database (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`)
+  3. Skip the seed and register manually
+- **Accepted:** Option 2 — full database reset via Neon SQL Editor.
+- **Rejected:** Code-level fix (`ON CONFLICT DO NOTHING`) was proposed but rejected in favour of a clean database reset.
+
+**Verification:**
+- Reviewed Render deploy logs after each fix
+- Confirmed Dockerfile now includes all required `COPY` directives
+- Confirmed `ENCRYPTION_KEY` is set in both local `.env` and Render environment
+
+---
+
 ## Summary Table
 
 | Change                      | AI Tool      | AI-Generated | Accepted | Rejected / Modified          | Verification Method                              |
@@ -392,3 +424,6 @@
 | `style.css` (+600 lines)    | Claude Code  | ✅           | ✅       | —                            | Visual inspection, mobile responsive test         |
 | `README.md` (full update)   | Claude Code  | ✅           | ✅       | —                            | Manual review against actual codebase             |
 | AI_USAGE_LOG.md (update)    | Claude Code  | ✅           | ✅       | —                            | Manual review against conversation history        |
+| Dockerfile (`COPY lib`)     | Gemini       | ✅           | ✅       | —                            | Render deploy logs, container file inspection     |
+| `ENCRYPTION_KEY` setup      | Gemini       | ✅           | ✅       | —                            | Render deploy logs, local `.env` verification     |
+| Database reset (clean slate)| Gemini       | ✅           | ✅       | Code fix rejected → DB reset | Neon SQL Editor, Render redeploy                  |

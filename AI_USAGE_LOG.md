@@ -396,6 +396,45 @@
 - Confirmed Dockerfile now includes all required `COPY` directives
 - Confirmed `ENCRYPTION_KEY` is set in both local `.env` and Render environment
 
+
+---
+
+## 14. Adding SonarCloud to CI/CD Pipeline
+
+**AI Tool Used:** Gemini (via Antigravity coding assistant)
+
+**Task:** Integrate code quality analysis into the GitHub Actions CI/CD pipeline without requiring a GitHub Organization owner's setup.
+
+**AI Suggestions & Actions Taken:**
+- Created a personal organization and project within SonarCloud mapping to the repository.
+- Created `sonar-project.properties` containing the project key and organization key (`2025-itcs383-emerald`).
+- Fixed an issue where SonarCloud failed to analyze the project due to case sensitivity in the `sonar.organization` key (updating it from `2025-ITCS383-Emerald` to `2025-itcs383-emerald`).
+- Updated `.github/workflows/workflow.yml` to include the `SonarSource/sonarcloud-github-action@v5` step, running parallel to the deployment job after CI passes.
+- Instructed how to safely store the `SONAR_TOKEN` within GitHub Secrets.
+- Resolved an issue with SonarCloud branch naming, providing instructions to rename the default `master` to `main` in the SonarCloud UI.
+
+**Verification:**
+- PR created and merged on GitHub.
+- GitHub Actions completed successfully.
+- Code quality analysis populating correctly on the SonarCloud web dashboard for the `main` branch.
+
+---
+
+## 15. Fixing SonarCloud Security Vulnerability (S5542)
+
+**AI Tool Used:** Gemini (via Antigravity coding assistant)
+
+**Task:** Fix a high-severity security vulnerability flagged by SonarQube regarding insecure encryption mode (`javascript:S5542`).
+
+**AI Suggestions & Actions Taken:**
+- Upgraded the encryption algorithm in `lib/crypto.js` from `aes-256-cbc` to `aes-256-gcm` to provide authenticated encryption (GCM).
+- Appended an authentication tag to the encrypted output format (`iv:authTag:encrypted`).
+- Designed a fallback in the `decrypt` method to automatically support decrypting legacy `aes-256-cbc` records smoothly, ensuring backward compatibility.
+- Resolved minor stylistic SonarQube warnings (`node:crypto` import and `?.` optional chaining).
+
+**Verification:**
+- Confirmed code executes properly, encrypts new data securely, and decrypts older data formats flawlessly.
+
 ---
 
 ## Summary Table
@@ -420,10 +459,12 @@
 | `manager-dashboard.html`    | Claude Code  | ✅           | ✅       | —                            | Browser testing, revenue cards, report generation |
 | `login.html` (role redirect)| Claude Code  | ✅           | ✅       | —                            | Login as 3 different roles, verified redirects    |
 | `dashboard.html` (nav update)| Claude Code | ✅           | ✅       | —                            | Browser visual inspection                         |
-| `app.js` (shared utilities) | Claude Code  | ✅           | ✅       | —                            | All pages load correctly with shared functions    |
+| `APP.js` (shared utilities) | Claude Code  | ✅           | ✅       | —                            | All pages load correctly with shared functions    |
 | `style.css` (+600 lines)    | Claude Code  | ✅           | ✅       | —                            | Visual inspection, mobile responsive test         |
 | `README.md` (full update)   | Claude Code  | ✅           | ✅       | —                            | Manual review against actual codebase             |
-| AI_USAGE_LOG.md (update)    | Claude Code  | ✅           | ✅       | —                            | Manual review against conversation history        |
+| `AI_USAGE_LOG.md` (update)  | Claude Code  | ✅           | ✅       | —                            | Manual review against conversation history        |
 | Dockerfile (`COPY lib`)     | Gemini       | ✅           | ✅       | —                            | Render deploy logs, container file inspection     |
 | `ENCRYPTION_KEY` setup      | Gemini       | ✅           | ✅       | —                            | Render deploy logs, local `.env` verification     |
 | Database reset (clean slate)| Gemini       | ✅           | ✅       | Code fix rejected → DB reset | Neon SQL Editor, Render redeploy                  |
+| SonarCloud CI/CD Setup      | Gemini       | ✅           | ✅       | Code quality integration     | GitHub Actions completed, SonarCloud Web UI       |
+| SonarCloud S5542 Crypto Fix | Gemini       | ✅           | ✅       | Added legacy decryption      | Fallback successfully decrypts existing DB entries|

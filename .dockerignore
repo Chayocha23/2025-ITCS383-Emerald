@@ -6,3 +6,8 @@ npm-debug.log
 .github
 README.md
 .DS_Store
+
+# Testing files
+*.test.js
+coverage/
+jest.config.js

@@ -935,9 +935,13 @@ app.post('/api/bank/transfer', async (req, res) => {
 // ──────────────────────────────────────────────
 // Start Server
 // ──────────────────────────────────────────────
-initDB().then(() => {
-  startExpiryJob(sql);
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+if (require.main === module) {
+  initDB().then(() => {
+    startExpiryJob(sql);
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
   });
-});
+}
+
+module.exports = app;

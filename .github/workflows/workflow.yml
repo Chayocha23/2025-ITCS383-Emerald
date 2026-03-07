@@ -51,6 +51,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js (for coverage parsing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies & run tests
+        run: |
+          npm ci
+          npm test
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
         env:

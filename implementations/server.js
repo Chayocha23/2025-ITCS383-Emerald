@@ -446,6 +446,7 @@ app.get('/api/membership/:userId', async (req, res) => {
           WHEN 'active' THEN 2
           ELSE 3
         END,
+        end_date DESC,
         created_at DESC
       LIMIT 1
     `;

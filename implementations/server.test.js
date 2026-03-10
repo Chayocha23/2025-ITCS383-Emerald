@@ -19,13 +19,14 @@ jest.mock('./lib/expiry', () => ({
     startExpiryJob: jest.fn()
 }));
 
-const { app } = require('./server');
+const { app, setSql } = require('./server');
 
 describe('server.js API Routes - Core Business Logic Testing', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
         mockSql.mockResolvedValue([]); // Default to empty results
+        setSql(mockSql); // Inject mock SQL into the server
     });
 
     describe('Authentication & Registration (`POST /api/register`)', () => {

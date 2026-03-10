@@ -194,7 +194,7 @@ describe('server.js API Routes - Core Business Logic Testing', () => {
                 .send({ userId: 1, type: 'month', duration: 1 });
 
             expect(res.statusCode).toBe(409);
-            expect(res.body.error).toBe('You already have an active or pending membership.');
+            expect(res.body.error).toBe('You already have an active membership. It must expire before you can renew.');
         });
 
         it('should successfully create a membership in pending_payment state', async () => {

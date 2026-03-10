@@ -344,13 +344,20 @@ app.post('/api/membership', async (req, res) => {
       return res.status(400).json({ error: 'Duration must be a positive integer.' });
     }
 
-    const existing = await sql`
+    // Block only if there is a currently active (non-expired) membership
+    const activeExisting = await sql`
       SELECT id FROM memberships
-      WHERE user_id = ${userId} AND (status = 'active' OR status = 'pending_payment') AND end_date >= CURRENT_DATE
+      WHERE user_id = ${userId} AND status = 'active' AND end_date >= CURRENT_DATE
     `;
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'You already have an active or pending membership.' });
+    if (activeExisting.length > 0) {
+      return res.status(409).json({ error: 'You already have an active membership. It must expire before you can renew.' });
     }
+
+    // Auto-cancel any abandoned pending_payment memberships so user can apply fresh
+    await sql`
+      UPDATE memberships SET status = 'cancelled'
+      WHERE user_id = ${userId} AND status = 'pending_payment'
+    `;
 
     const unitPrice = PRICING[type];
     const totalPrice = unitPrice * Number(duration);

@@ -344,19 +344,25 @@ app.post('/api/membership', async (req, res) => {
       return res.status(400).json({ error: 'Duration must be a positive integer.' });
     }
 
-    // Block only if there is a currently active (non-expired) membership
+    // Block only if there is a truly active (non-expired) membership using Bangkok timezone
     const activeExisting = await sql`
       SELECT id FROM memberships
-      WHERE user_id = ${userId} AND status = 'active' AND end_date >= CURRENT_DATE
+      WHERE user_id = ${userId}
+        AND status = 'active'
+        AND end_date >= (NOW() AT TIME ZONE 'Asia/Bangkok')::date
     `;
     if (activeExisting.length > 0) {
       return res.status(409).json({ error: 'You already have an active membership. It must expire before you can renew.' });
     }
 
-    // Auto-cancel any abandoned pending_payment memberships so user can apply fresh
+    // Auto-cancel any abandoned pending_payment or expired active memberships
     await sql`
       UPDATE memberships SET status = 'cancelled'
-      WHERE user_id = ${userId} AND status = 'pending_payment'
+      WHERE user_id = ${userId}
+        AND (
+          status = 'pending_payment'
+          OR (status = 'active' AND end_date < (NOW() AT TIME ZONE 'Asia/Bangkok')::date)
+        )
     `;
 
     const unitPrice = PRICING[type];
@@ -510,7 +516,7 @@ app.post('/api/bookings', async (req, res) => {
 
     const membership = await sql`
       SELECT id FROM memberships
-      WHERE user_id = ${userId} AND status = 'active' AND end_date >= CURRENT_DATE
+      WHERE user_id = ${userId} AND status = 'active' AND end_date >= (NOW() AT TIME ZONE 'Asia/Bangkok')::date
     `;
     if (membership.length === 0) {
       return res.status(400).json({ error: 'Active membership required to book.' });

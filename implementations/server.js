@@ -432,7 +432,15 @@ app.get('/api/membership/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const memberships = await sql`
-      SELECT * FROM memberships WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 1
+      SELECT * FROM memberships WHERE user_id = ${userId}
+      ORDER BY
+        CASE status
+          WHEN 'pending_payment' THEN 1
+          WHEN 'active' THEN 2
+          ELSE 3
+        END,
+        created_at DESC
+      LIMIT 1
     `;
     const payments = await sql`
       SELECT * FROM payments WHERE user_id = ${userId} ORDER BY created_at DESC

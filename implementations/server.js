@@ -15,7 +15,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database connection
-const sql = postgres(process.env.DATABASE_URL);
+let sql;
+if (process.env.DATABASE_URL) {
+  sql = postgres(process.env.DATABASE_URL);
+}
+
+// Getter for lazy sql access (used by middleware registered at load time)
+const getSql = () => sql;
+getSql._isGetter = true;
+
+// Allow tests to inject a mock sql
+function setSql(mockSql) {
+  sql = mockSql;
+}
 
 // ── Pricing ──
 const PRICING = {
@@ -334,35 +346,83 @@ app.post('/api/membership', async (req, res) => {
 
     const existing = await sql`
       SELECT id FROM memberships
-      WHERE user_id = ${userId} AND status = 'active' AND end_date >= CURRENT_DATE
+      WHERE user_id = ${userId} AND (status = 'active' OR status = 'pending_payment') AND end_date >= CURRENT_DATE
     `;
     if (existing.length > 0) {
-      return res.status(409).json({ error: 'You already have an active membership.' });
+      return res.status(409).json({ error: 'You already have an active or pending membership.' });
     }
 
     const unitPrice = PRICING[type];
     const totalPrice = unitPrice * Number(duration);
 
     const membership = await sql`
-      INSERT INTO memberships (user_id, type, duration, price_paid, end_date)
-      VALUES (${userId}, ${type}, ${Number(duration)}, ${totalPrice},
+      INSERT INTO memberships (user_id, type, duration, price_paid, status, end_date)
+      VALUES (${userId}, ${type}, ${Number(duration)}, ${totalPrice}, 'pending_payment',
               CURRENT_DATE + ${type === 'day' ? sql`CAST(${Number(duration)} || ' days' AS INTERVAL)` :
         type === 'month' ? sql`CAST(${Number(duration)} || ' months' AS INTERVAL)` :
           sql`CAST(${Number(duration)} || ' years' AS INTERVAL)`})
       RETURNING *
     `;
 
-    await sql`
-      INSERT INTO payments (user_id, membership_id, amount, payment_type)
-      VALUES (${userId}, ${membership[0].id}, ${totalPrice}, 'subscription')
-    `;
-
     res.status(201).json({
-      message: 'Membership activated successfully!',
+      message: 'Membership created. Please complete payment.',
       membership: membership[0]
     });
   } catch (err) {
     console.error('Membership error:', err);
+    res.status(500).json({ error: 'Server error. Please try again.' });
+  }
+});
+
+// POST /api/membership/:membershipId/pay
+app.post('/api/membership/:membershipId/pay', async (req, res) => {
+  try {
+    const { membershipId } = req.params;
+    const { userId, paymentMethod } = req.body;
+
+    if (!userId || !paymentMethod) {
+      return res.status(400).json({ error: 'userId and paymentMethod are required.' });
+    }
+    if (!['credit_card', 'bank_transfer', 'truewallet'].includes(paymentMethod)) {
+      return res.status(400).json({ error: 'Invalid payment method.' });
+    }
+
+    const memberships = await sql`
+      SELECT * FROM memberships WHERE id = ${membershipId} AND user_id = ${userId}
+    `;
+    if (memberships.length === 0) {
+      return res.status(404).json({ error: 'Membership not found.' });
+    }
+    const membership = memberships[0];
+
+    if (membership.status !== 'pending_payment') {
+      return res.status(400).json({ error: 'Membership is not pending payment.' });
+    }
+
+    // Simulate bank transfer delay
+    if (paymentMethod === 'bank_transfer') {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    const amount = Number(membership.price_paid);
+
+    const payment = await sql`
+      INSERT INTO payments (user_id, membership_id, amount, payment_type, payment_method)
+      VALUES (${userId}, ${membershipId}, ${amount}, 'subscription', ${paymentMethod})
+      RETURNING *
+    `;
+
+    await sql`
+      UPDATE memberships SET status = 'active' WHERE id = ${membershipId}
+    `;
+
+    res.json({
+      message: 'Membership payment successful! Your membership is now active.',
+      membership: { ...membership, status: 'active' },
+      payment: payment[0]
+    });
+  } catch (err) {
+    console.error('Membership payment error:', err);
     res.status(500).json({ error: 'Server error. Please try again.' });
   }
 });
@@ -383,30 +443,6 @@ app.get('/api/membership/:userId', async (req, res) => {
     });
   } catch (err) {
     console.error('Get membership error:', err);
-    res.status(500).json({ error: 'Server error. Please try again.' });
-  }
-});
-
-// POST /api/payment
-app.post('/api/payment', async (req, res) => {
-  try {
-    const { userId, membershipId, bookingId, amount, paymentMethod } = req.body;
-    if (!userId || !amount) {
-      return res.status(400).json({ error: 'userId and amount are required.' });
-    }
-    if (Number(amount) <= 0) {
-      return res.status(400).json({ error: 'Amount must be greater than zero.' });
-    }
-
-    const payment = await sql`
-      INSERT INTO payments (user_id, membership_id, booking_id, amount, payment_type, payment_method)
-      VALUES (${userId}, ${membershipId || null}, ${bookingId || null}, ${Number(amount)}, 'deposit', ${paymentMethod || 'unspecified'})
-      RETURNING *
-    `;
-
-    res.status(201).json({ message: 'Payment recorded successfully!', payment: payment[0] });
-  } catch (err) {
-    console.error('Payment error:', err);
     res.status(500).json({ error: 'Server error. Please try again.' });
   }
 });
@@ -614,12 +650,29 @@ app.post('/api/bookings/:bookingId/cancel', async (req, res) => {
   }
 });
 
+// GET /api/bookings/:bookingId — fetch a single booking by ID
+app.get('/api/bookings/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const bookings = await sql`
+      SELECT * FROM bookings WHERE id = ${bookingId}
+    `;
+    if (bookings.length === 0) {
+      return res.status(404).json({ error: 'Booking not found.' });
+    }
+    res.json({ booking: bookings[0] });
+  } catch (err) {
+    console.error('Get booking error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 // ──────────────────────────────────────────────
 // EMPLOYEE ROUTES
 // ──────────────────────────────────────────────
 
 // GET /api/employee/reservations?date=YYYY-MM-DD&userId=X
-app.get('/api/employee/reservations', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.get('/api/employee/reservations', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const { date } = req.query;
     if (!date) return res.status(400).json({ error: 'Date is required.' });
@@ -649,7 +702,7 @@ app.get('/api/employee/reservations', requireRole(sql, 'employee', 'manager'), a
 });
 
 // POST /api/employee/checkin
-app.post('/api/employee/checkin', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.post('/api/employee/checkin', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const { bookingId, employeeId } = req.body;
     const bookings = await sql`SELECT * FROM bookings WHERE id = ${bookingId}`;
@@ -669,7 +722,7 @@ app.post('/api/employee/checkin', requireRole(sql, 'employee', 'manager'), async
 });
 
 // GET /api/employee/equipment
-app.get('/api/employee/equipment', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.get('/api/employee/equipment', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const equipment = await sql`SELECT * FROM equipment ORDER BY category, name`;
     res.json({ equipment });
@@ -680,7 +733,7 @@ app.get('/api/employee/equipment', requireRole(sql, 'employee', 'manager'), asyn
 });
 
 // PUT /api/employee/equipment/:equipmentId
-app.put('/api/employee/equipment/:equipmentId', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.put('/api/employee/equipment/:equipmentId', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const { equipmentId } = req.params;
     const { totalQuantity, availableQuantity } = req.body;
@@ -700,7 +753,7 @@ app.put('/api/employee/equipment/:equipmentId', requireRole(sql, 'employee', 'ma
 });
 
 // POST /api/employee/expenses
-app.post('/api/employee/expenses', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.post('/api/employee/expenses', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const { employeeId, category, description, amount, expenseDate } = req.body;
     if (!category || !amount) return res.status(400).json({ error: 'Category and amount are required.' });
@@ -718,7 +771,7 @@ app.post('/api/employee/expenses', requireRole(sql, 'employee', 'manager'), asyn
 });
 
 // GET /api/employee/expenses?date=YYYY-MM-DD&userId=X
-app.get('/api/employee/expenses', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.get('/api/employee/expenses', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   try {
     const { date } = req.query;
     const whereDate = date || new Date().toISOString().split('T')[0];
@@ -739,7 +792,7 @@ app.get('/api/employee/expenses', requireRole(sql, 'employee', 'manager'), async
 });
 
 // GET /api/employee/cctv
-app.get('/api/employee/cctv', requireRole(sql, 'employee', 'manager'), async (req, res) => {
+app.get('/api/employee/cctv', requireRole(getSql, 'employee', 'manager'), async (req, res) => {
   res.json({
     cameras: [
       { id: 1, name: 'Main Entrance', location: 'Ground Floor', status: 'online' },
@@ -757,7 +810,7 @@ app.get('/api/employee/cctv', requireRole(sql, 'employee', 'manager'), async (re
 // ──────────────────────────────────────────────
 
 // GET /api/manager/revenue?period=day&date=YYYY-MM-DD or ?period=month&month=YYYY-MM&userId=X
-app.get('/api/manager/revenue', requireRole(sql, 'manager'), async (req, res) => {
+app.get('/api/manager/revenue', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { period, date, month } = req.query;
     if (period === 'day' && date) {
@@ -790,7 +843,7 @@ app.get('/api/manager/revenue', requireRole(sql, 'manager'), async (req, res) =>
 });
 
 // GET /api/manager/report?month=YYYY-MM&userId=X
-app.get('/api/manager/report', requireRole(sql, 'manager'), async (req, res) => {
+app.get('/api/manager/report', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { month } = req.query;
     if (!month) return res.status(400).json({ error: 'Month (YYYY-MM) is required.' });
@@ -822,7 +875,7 @@ app.get('/api/manager/report', requireRole(sql, 'manager'), async (req, res) => 
 });
 
 // GET /api/manager/employees?userId=X
-app.get('/api/manager/employees', requireRole(sql, 'manager'), async (req, res) => {
+app.get('/api/manager/employees', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const employees = await sql`
       SELECT id, first_name, last_name, email, phone, address, role, created_at
@@ -840,7 +893,7 @@ app.get('/api/manager/employees', requireRole(sql, 'manager'), async (req, res) 
 });
 
 // POST /api/manager/employees
-app.post('/api/manager/employees', requireRole(sql, 'manager'), async (req, res) => {
+app.post('/api/manager/employees', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { firstName, lastName, email, phone, address, password } = req.body;
     if (!firstName || !lastName || !email || !phone || !address || !password) {
@@ -865,7 +918,7 @@ app.post('/api/manager/employees', requireRole(sql, 'manager'), async (req, res)
 });
 
 // PUT /api/manager/employees/:employeeId
-app.put('/api/manager/employees/:employeeId', requireRole(sql, 'manager'), async (req, res) => {
+app.put('/api/manager/employees/:employeeId', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { employeeId } = req.params;
     const { firstName, lastName, email, phone, address } = req.body;
@@ -889,7 +942,7 @@ app.put('/api/manager/employees/:employeeId', requireRole(sql, 'manager'), async
 });
 
 // DELETE /api/manager/employees/:employeeId
-app.delete('/api/manager/employees/:employeeId', requireRole(sql, 'manager'), async (req, res) => {
+app.delete('/api/manager/employees/:employeeId', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { employeeId } = req.params;
     const result = await sql`DELETE FROM users WHERE id = ${employeeId} AND role = 'employee' RETURNING id`;
@@ -902,7 +955,7 @@ app.delete('/api/manager/employees/:employeeId', requireRole(sql, 'manager'), as
 });
 
 // GET /api/manager/summary?date=YYYY-MM-DD&userId=X
-app.get('/api/manager/summary', requireRole(sql, 'manager'), async (req, res) => {
+app.get('/api/manager/summary', requireRole(getSql, 'manager'), async (req, res) => {
   try {
     const { date } = req.query;
     const targetDate = date || new Date().toISOString().split('T')[0];
@@ -944,4 +997,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = app;
+module.exports = { app, setSql };

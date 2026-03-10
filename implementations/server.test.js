@@ -19,7 +19,7 @@ jest.mock('./lib/expiry', () => ({
     startExpiryJob: jest.fn()
 }));
 
-const app = require('./server');
+const { app } = require('./server');
 
 describe('server.js API Routes - Core Business Logic Testing', () => {
 
@@ -111,29 +111,28 @@ describe('server.js API Routes - Core Business Logic Testing', () => {
                 .send({ userId: 1, type: 'month', duration: 1 });
 
             expect(res.statusCode).toBe(409);
-            expect(res.body.error).toBe('You already have an active membership.');
+            expect(res.body.error).toBe('You already have an active or pending membership.');
         });
 
-        it('should successfully create a membership and record payment automatically', async () => {
+        it('should successfully create a membership in pending_payment state', async () => {
             // Input: Valid request for a 2-month mapping.
-            // Reasoning: Core workflow mapping that tests state transitioning from 'No Membership' -> 'Has Active Tier'.
-            // Expected Result: 201 Created and SQL triggers for both the membership table and tracking payment table.
+            // Reasoning: Core workflow mapping that tests state transitioning from 'No Membership' -> 'Pending Payment'.
+            // Expected Result: 201 Created with pending_payment status. Payment is completed separately on the payment page.
 
             mockSql
                 .mockResolvedValueOnce([]) // No active membership found
                 .mockResolvedValueOnce([]) // Nested CAST(...) call for Postgres interval
-                .mockResolvedValueOnce([{ id: 5 }]) // Insert membership return mock
-                .mockResolvedValueOnce([]); // Insert payment tracking return mock
+                .mockResolvedValueOnce([{ id: 5, status: 'pending_payment' }]); // Insert membership return mock
 
             const res = await request(app)
                 .post('/api/membership')
                 .send({ userId: 2, type: 'month', duration: 2 });
 
             expect(res.statusCode).toBe(201);
-            expect(res.body.message).toBe('Membership activated successfully!');
+            expect(res.body.message).toBe('Membership created. Please complete payment.');
 
-            // Logic requires 4 chained DB hits: Check existence -> Nested Cast -> Insert membership -> Insert payment receipt.
-            expect(mockSql).toHaveBeenCalledTimes(4);
+            // Logic requires 3 chained DB hits: Check existence -> Nested Cast -> Insert membership (pending_payment).
+            expect(mockSql).toHaveBeenCalledTimes(3);
         });
     });
 

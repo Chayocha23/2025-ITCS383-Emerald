@@ -108,7 +108,7 @@
                     </div>
                 </div>
 
-                <button class="btn-apply" id="applyBtn" onclick="handleApply()">Apply for Membership</button>
+                <button class="btn-apply" id="applyBtn" onclick="handleApply()">Apply / Renew Membership</button>
             </div>
 
             <!-- Payment History -->
@@ -154,7 +154,7 @@
                     const isPending = data.membership.status === 'pending_payment';
                     renderMembershipStatus(data.membership, isActive, isPending);
 
-                    if (isActive || isPending) {
+                    if (isActive) {
                         document.getElementById('applySection').style.display = 'none';
                     }
                 }
@@ -288,7 +288,7 @@
                 if (!res.ok) {
                     showToast(data.error, 'error');
                     btn.classList.remove('loading');
-                    btn.textContent = 'Apply for Membership';
+                    btn.textContent = 'Apply / Renew Membership';
                     return;
                 }
 
@@ -310,7 +310,7 @@
             } catch (err) {
                 showToast('Connection error. Please try again.', 'error');
                 btn.classList.remove('loading');
-                btn.textContent = 'Apply for Membership';
+                btn.textContent = 'Apply / Renew Membership';
             }
         }
 

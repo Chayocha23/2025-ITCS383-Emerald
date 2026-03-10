@@ -13,7 +13,11 @@ function startExpiryJob(sql) {
         console.log(`Expired ${expired.length} unpaid booking(s)`);
       }
     } catch (err) {
-      console.error('Expiry job error:', err.message);
+      if (err.code === 'ECONNRESET') {
+        // Neon DB scales to zero when idle, causing this expected error. It will reconnect on the next request.
+      } else {
+        console.error('Expiry job error:', err.message);
+      }
     }
   }, 60000);
 }

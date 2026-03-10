@@ -547,9 +547,11 @@ app.post('/api/bookings', async (req, res) => {
       return res.status(400).json({ error: `Not enough desks available. Only ${availableDesks.length} desk(s) free.` });
     }
 
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
     const booking = await sql`
       INSERT INTO bookings (user_id, booking_date, start_time, end_time, num_desks, status, expires_at)
-      VALUES (${userId}, ${date}, ${startTime}::time, ${endTime}::time, ${Number(numDesks)}, 'pending', NOW() + INTERVAL '30 minutes')
+      VALUES (${userId}, ${date}, ${startTime}::time, ${endTime}::time, ${Number(numDesks)}, 'pending', ${expiresAt})
       RETURNING *
     `;
 
@@ -559,7 +561,7 @@ app.post('/api/bookings', async (req, res) => {
 
     res.status(201).json({
       message: 'Booking created! Please complete payment within 30 minutes.',
-      booking: { ...booking[0], desks: availableDesks.map(d => d.label) }
+      booking: { ...booking[0], expires_at: expiresAt.toISOString(), desks: availableDesks.map(d => d.label) }
     });
   } catch (err) {
     console.error('Booking error:', err);
@@ -587,7 +589,10 @@ app.post('/api/bookings/:bookingId/pay', async (req, res) => {
     if (booking.status !== 'pending') {
       return res.status(400).json({ error: `Booking is ${booking.status}. Cannot pay.` });
     }
-    if (booking.expires_at && new Date(booking.expires_at) < new Date()) {
+    const expiresAtUtc = booking.expires_at
+      ? new Date(typeof booking.expires_at === 'string' && !booking.expires_at.includes('Z') ? booking.expires_at + 'Z' : booking.expires_at)
+      : null;
+    if (expiresAtUtc && expiresAtUtc < new Date()) {
       await sql`UPDATE bookings SET status = 'expired' WHERE id = ${bookingId}`;
       return res.status(400).json({ error: 'Booking has expired. Please create a new booking.' });
     }
@@ -634,7 +639,13 @@ app.get('/api/bookings/user/:userId', async (req, res) => {
       FROM bookings b WHERE b.user_id = ${userId}
       ORDER BY b.booking_date DESC, b.start_time DESC
     `;
-    res.json({ bookings });
+    const result = bookings.map(b => ({
+      ...b,
+      expires_at: b.expires_at
+        ? new Date(typeof b.expires_at === 'string' && !b.expires_at.includes('Z') ? b.expires_at + 'Z' : b.expires_at).toISOString()
+        : null
+    }));
+    res.json({ bookings: result });
   } catch (err) {
     console.error('Get bookings error:', err);
     res.status(500).json({ error: 'Server error.' });

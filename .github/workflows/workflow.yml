@@ -29,13 +29,15 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        working-directory: ./implementations
         run: npm ci
 
       - name: Lint check
+        working-directory: ./implementations
         run: npm run lint
 
       - name: Build Docker image (test)
-        run: docker build -t $(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]'):test .
+        run: docker build -t $(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]'):test ./implementations
 
   # ─────────────────────────────────────
   # SonarQube — Code Quality Analysis
@@ -58,12 +60,15 @@ jobs:
           cache: npm
 
       - name: Install dependencies & run tests
+        working-directory: ./implementations
         run: |
           npm ci
           npm test
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
+        with:
+          projectBaseDir: implementations
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -103,7 +108,7 @@ jobs:
       - name: Build & push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./implementations
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

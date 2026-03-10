@@ -210,7 +210,7 @@
                         <span class="membership-status__item-value">฿${Number(membership.price_paid).toLocaleString()}</span>
                     </div>
                 </div>
-                ${isPending ?\`<button class="btn-apply" style="margin-top:16px;width:100%;" onclick="goToMembershipPayment(${membership.id}, '${membership.type}', ${membership.duration}, ${Number(membership.price_paid)})">Complete Payment</button>\` : ''}
+                ${isPending ? '<button class="btn-apply" style="margin-top:16px;width:100%;" onclick="goToMembershipPayment(' + membership.id + ', \'' + membership.type + '\', ' + membership.duration + ', ' + Number(membership.price_paid) + ')">Complete Payment</button>' : ''}
             `;
         }
 
@@ -258,10 +258,10 @@
             const unitPrice = PRICING[selectedType];
             const total = unitPrice * duration;
 
-            document.getElementById('unitPrice').textContent = \`฿\${unitPrice.toLocaleString()}\`;
+            document.getElementById('unitPrice').textContent = '฿' + unitPrice.toLocaleString();
             document.getElementById('durationUnit').textContent = UNIT_LABELS[selectedType];
-            document.getElementById('durationSummary').textContent = \`\${duration} \${UNIT_LABELS[selectedType]}\`;
-            document.getElementById('totalPrice').textContent = \`฿\${total.toLocaleString()}\`;
+            document.getElementById('durationSummary').textContent = duration + ' ' + UNIT_LABELS[selectedType];
+            document.getElementById('totalPrice').textContent = '฿' + total.toLocaleString();
         }
 
         // ── Apply for membership ──
@@ -299,13 +299,13 @@
                     id: data.membership.id,
                     membershipType: selectedType,
                     duration: duration,
-                    durationLabel: \`\${duration} \${unitLabels[selectedType]}\`,
-                    amount: totalPrice
+                    durationLabel: duration + ' ' + unitLabels[selectedType],
+                    amount: PRICING[selectedType] * duration
                 }));
 
                 showToast('Redirecting to payment...', 'success');
                 setTimeout(() => {
-                    window.location.href = \`payment.html?type=membership&id=\${data.membership.id}\`;
+                    window.location.href = 'payment.html?type=membership&id=' + data.membership.id;
                 }, 800);
             } catch (err) {
                 showToast('Connection error. Please try again.', 'error');
@@ -321,10 +321,10 @@
                 id: membershipId,
                 membershipType: type,
                 duration: duration,
-                durationLabel: \`\${duration} \${unitLabels[type]}\`,
+                durationLabel: duration + ' ' + unitLabels[type],
                 amount: amount
             }));
-            window.location.href = \`payment.html?type=membership&id=\${membershipId}\`;
+            window.location.href = 'payment.html?type=membership&id=' + membershipId;
         }
 
         // handleLogout, toggleProfileMenu, and click-outside are in app.js

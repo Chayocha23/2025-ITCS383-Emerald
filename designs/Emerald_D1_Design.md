@@ -167,9 +167,3 @@ The Use Case Diagram shows all the interactions between the three actors (Custom
 - **Include:** "View Revenue Reports" includes "Generate Income Report" — revenue viewing provides the ability to generate detailed monthly income vs expense reports
 
 ---
-
-### Cross-Cutting Concerns
-
-- **Encryption:** Customer PII (first name, last name, address, phone) is encrypted using AES-256-CBC before being stored in the Database. This is handled by a shared crypto module (`lib/crypto.js`) used by the Create Account and profile management flows.
-- **Role-Based Access Control:** The Authentication component determines the user's role (customer, employee, manager), and each API endpoint enforces role restrictions through middleware (`lib/auth.js`). This ensures that customers cannot access employee endpoints, and employees cannot access manager endpoints.
-- **Booking Expiry:** A background job (`lib/expiry.js`) periodically checks for unpaid bookings older than 30 minutes and marks them as expired, releasing the reserved desks. This fulfills the requirement that unpaid booking slots return to availability after 30 minutes.

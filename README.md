@@ -277,9 +277,9 @@ Merge to main   → CI + CD (build → push to GHCR → deploy to Render)
   - `ENCRYPTION_KEY` = 64-character hex string for AES-256-GCM encryption
 
 ### Team Members <br>
-6688139&emsp;Naruebordint Veangnont
-6688141&emsp;Rattee Watperatam
-6688155&emsp;Nattaphong Jullayakiat
-6688164&emsp;Veerakron Kaewthong
-6688172&emsp;Veerakorn No-in
-6688239&emsp;Piyada Chalermnontakarn
+6688139&emsp;Naruebordint Veangnont <br>
+6688141&emsp;Rattee Watperatam <br>
+6688155&emsp;Nattaphong Jullayakiat <br>
+6688164&emsp;Veerakron Kaewthong <br>
+6688172&emsp;Veerakorn No-in <br>
+6688239&emsp;Piyada Chalermnontakarn <br>

@@ -127,7 +127,7 @@ The components are organized around distinct business capabilities, following th
 
 ## Use Case Diagram
 
-![Use Case Diagram](diagrams/CoWorkingSpace_UseCase.png)
+![Use Case Diagram](diagrams/CoWorkingSpace_UseCase.jpg)
 
 ### Description
 

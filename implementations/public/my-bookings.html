@@ -129,6 +129,9 @@
 
         function canCancelBooking(booking) {
             if (booking.status !== 'confirmed' && booking.status !== 'pending') return false;
+            // Pending (unpaid) bookings can always be cancelled
+            if (booking.status === 'pending') return true;
+            // Confirmed (paid) bookings require 1+ day notice
             const bookingDate = new Date(booking.booking_date);
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);

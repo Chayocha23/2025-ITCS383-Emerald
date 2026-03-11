@@ -666,17 +666,23 @@ app.post('/api/bookings/:bookingId/cancel', async (req, res) => {
       return res.status(400).json({ error: `Booking is already ${booking.status}.` });
     }
 
-    const bookingDate = new Date(booking.booking_date);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    // Pending (unpaid) bookings can always be cancelled
+    // Confirmed (paid) bookings require 1+ day notice for refund
+    let refundEligible = false;
+    if (booking.status === 'confirmed') {
+      const bookingDate = new Date(booking.booking_date);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
 
-    if (bookingDate < tomorrow) {
-      return res.status(400).json({ error: 'Cannot cancel less than 1 day before the reservation. No refund available.' });
+      if (bookingDate < tomorrow) {
+        return res.status(400).json({ error: 'Cannot cancel less than 1 day before the reservation. No refund available.' });
+      }
+      refundEligible = true;
     }
 
     await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${bookingId}`;
-    res.json({ message: 'Booking cancelled successfully.', refundEligible: true });
+    res.json({ message: 'Booking cancelled successfully.', refundEligible });
   } catch (err) {
     console.error('Cancel booking error:', err);
     res.status(500).json({ error: 'Server error.' });

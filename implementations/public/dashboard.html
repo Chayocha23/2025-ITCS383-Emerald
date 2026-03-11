@@ -149,8 +149,11 @@
 
                 if (data.membership) {
                     currentMembership = data.membership;
-                    const isActive = data.membership.status === 'active' &&
-                        new Date(data.membership.end_date) >= new Date();
+                    const bkkFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const todayBkk = bkkFormatter.format(new Date());
+                    const endDateBkk = bkkFormatter.format(new Date(data.membership.end_date));
+
+                    const isActive = data.membership.status === 'active' && endDateBkk >= todayBkk;
                     const isPending = data.membership.status === 'pending_payment';
                     renderMembershipStatus(data.membership, isActive, isPending);
 
@@ -184,8 +187,8 @@
             }
 
             const typeLabel = membership.type.charAt(0).toUpperCase() + membership.type.slice(1);
-            const startDate = new Date(membership.start_date).toLocaleDateString();
-            const endDate = new Date(membership.end_date).toLocaleDateString();
+            const startDate = new Date(membership.start_date).toLocaleDateString(undefined, { timeZone: 'Asia/Bangkok' });
+            const endDate = new Date(membership.end_date).toLocaleDateString(undefined, { timeZone: 'Asia/Bangkok' });
 
             details.innerHTML = `
                 <div class="membership-status__grid">

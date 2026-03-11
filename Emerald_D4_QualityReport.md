@@ -13,11 +13,11 @@ The project's codebase has been continuously evaluated via **SonarCloud** in our
 - **Maintainability Issues:** 14 (A Rating)
 - **Code Duplication:** 0.0%
 
-![SonarCloud Dashboard Summary](/Users/title/Desktop/2025-ITCS383-Emerald/assets/sonar_summary.png)
+![SonarCloud Dashboard Summary](assets/sonar_summary.png)
 
 The 14 maintainability issues are entirely minor "Code Smells" (e.g., *Prefer `globalThis` over `window`* in frontend script files). These are low-priority stylistic suggestions for ES2020 portability and do not represent any functional flaws or architectural risks. 
 
-![SonarCloud Maintainability Code Smells](/Users/title/Desktop/2025-ITCS383-Emerald/assets/sonar_issues.png)
+![SonarCloud Maintainability Code Smells](assets/sonar_issues.png)
 
 No major vulnerabilities, bugs, or stylistic roadblocks exist. The CI pipeline successfully blocks any pull requests that fail to meet these high maintainability ratings.
 

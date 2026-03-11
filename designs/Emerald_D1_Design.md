@@ -12,7 +12,7 @@ This document presents the C4 architecture diagrams for SpaceHub, a co-working s
 
 ### Description
 
-The Context Diagram shows SpaceHub as a single system and identifies the three types of users (actors) and two external systems that interact with it.
+The Context Diagram shows SpaceHub as a single system and identifies the three types of users (actors) and two external systems that interact with.
 
 ### Actors
 

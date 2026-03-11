@@ -131,7 +131,7 @@ The components are organized around distinct business capabilities, following th
 
 ### Description
 
-The Use Case Diagram shows all the interactions between the three actors (Customer, Employee, Manager) and the Co-Working Space Management System.
+The Use Case Diagram shows all the interactions between the four actors (Customer, Employee, Manager, Bank System) and the Co-Working Space Management System.
 
 ### Customer Use Cases
 

@@ -79,7 +79,6 @@ A full-featured co-working space management system with desk booking, membership
 │   │   ├── payment.html            # Payment form (3 methods + countdown)
 │   │   ├── employee-dashboard.html # Employee operations panel
 │   │   ├── manager-dashboard.html  # Manager analytics & controls
-│   │   ├── admin.html              # Admin dashboard
 │   │   ├── style.css               # Blue & white BEM design system
 │   │   └── app.js                  # Shared frontend utilities
 │   ├── server.js                   # Express server + all API endpoints

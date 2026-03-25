@@ -137,44 +137,102 @@ The following information was necessary to set up and run the project:
 
 ### c. Code Quality: SonarQube Cloud
 
-#### 1. Executive Summary
-The current state of the project indicates a significant increase in technical debt and security risks compared to the legacy reports. While the previous team maintained a "Passed" Quality Gate with zero security vulnerabilities and the introduction of a **high-severity security issue**.
-
 ##### Original SonarQube result
 <img width="1438" height="811" alt="sonar_summary" src="https://github.com/user-attachments/assets/acdf632f-0a2c-4740-b180-c346e2004405" />
 <img width="1438" height="811" alt="sonar_issues" src="https://github.com/user-attachments/assets/6544abb9-280d-4ea9-bdbe-4c086c206d63" />
 
 ##### Handover SonarQube result (latest)
-<img width="1440" height="812" alt="Screenshot 2569-03-25 at 20 58 53" src="https://github.com/user-attachments/assets/1ec85b0c-73bd-4fae-b51e-ba421a33ef37" />
-<img width="1440" height="812" alt="Screenshot 2569-03-25 at 20 59 24" src="https://github.com/user-attachments/assets/9d3591e8-9990-429a-b022-ecdbb46ec49e" />
+<img width="1440" height="812" alt="Screenshot 2569-03-25 at 22 32 17" src="https://github.com/user-attachments/assets/1b71ab4a-baa5-4f9d-a530-49a16ac645bc" />
+<img width="1440" height="812" alt="Screenshot 2569-03-25 at 22 32 25" src="https://github.com/user-attachments/assets/34206f44-5c72-4c97-a86e-0b08d7eb80a8" />
 
 
+#### 1. Quality Gate
+
+| Status |
+|--------|
+| **Passed** ✅ |
+
+The project successfully passed the Quality Gate, meeting all required conditions set by the Sonar way quality profile.
 
 
-#### 2. Comparison of Metrics
-The discrepancy in the **Lines of Code (LOC)** confirms that the handover version is much larger than the version captured in the legacy screenshots, suggesting the previous team documented the project in an incomplete or early state.
+#### 2. Security
 
-| Metric                  | Legacy Report (Old Team) | Current Handover (Latest Run) | Status             |
-|-------------------------|-------------------------|-------------------------------|------------------|
-| Lines of Code (LOC)      | 992                     | 6,200                         | Significant Increase |
-| Security Issues          | 0 (Rating A)            | 1 (Rating D)                  | Regression        |
-| Reliability Issues       | 0 (Rating A)            | 17 (Rating A)                 | Regression        |
-| Maintainability          | 14 (Rating A)           | 73 (Rating A)                 | Regression        |
-| Code Coverage            | 74.7%                   | 0.0%                          | Critical Drop     |
-| Duplications             | 0.0%                    | 0.3%                          | Slight Increase   |
+| Metric | Value | Rating |
+|--------|-------|--------|
+| Open Issues | 0 | **A** |
+
+No security vulnerabilities were detected. The project achieved the highest possible security rating (A).
 
 
-#### 3. Key Findings & Risks
+#### 3. Reliability
 
-- **Project Scale Discrepancy:**  
-  The codebase has grown from ~1k LOC to 6.2k LOC. This indicates that the legacy screenshots represent an early development phase and do not reflect the full scope of the project being handed over.
+| Metric | Value | Rating |
+|--------|-------|--------|
+| Open Issues | 0 | **A** |
 
-- **Security Vulnerability:**  
-  A new **High-Severity Security Issue** has been introduced (rated 'D'). Specifically, the "Issues" view highlights a vulnerability regarding the use of **insecure modes and padding schemes** in cryptographic implementations (`crypto.test.js`), which poses a risk to data integrity.
+No reliability issues (bugs) were found. The project achieved the highest possible reliability rating (A).
 
-- **Increased Technical Debt:**  
-  Maintainability issues have jumped from 14 to 73. While the rating remains an 'A', the sheer volume of **"Code Smells"** (e.g., preferring `node:crypto` over `crypto` or `globalThis` over `window`) will require significant cleanup effort.
-  
+---
 
-#### 4. Conclusion
-The code quality of the handover project is currently **sub-optimal** and carries **high risk**. The presence of a high-severity security vulnerability is the most critical item that need to be addressed before the project can be considered **production-ready or stable**.
+#### 4. Maintainability
+
+| Metric | Value | Rating |
+|--------|-------|--------|
+| Open Issues | 14 | **A** |
+
+Although 14 maintainability issues were identified, the project still achieved an A rating, indicating that the technical debt ratio remains within acceptable thresholds. All 14 issues are classified as **Code Smells** of **Minor** severity with an estimated remediation effort of **54 minutes** in total.
+
+The issues are concentrated in `public/app.js` and are of the same type:
+
+- **Prefer `globalThis` over `window`** — flagged across multiple lines (L10, L11, L19, L24, L32, and others)
+  - Severity: Minor
+  - Effort: 2 minutes each
+  - Category: Consistency / Portability (ES2020)
+
+These issues suggest that the codebase uses the browser-specific `window` global object in contexts where the more modern and environment-agnostic `globalThis` is preferred.
+
+
+#### 5. Coverage
+
+| Metric | Value |
+|--------|-------|
+| Coverage | 74.4% |
+| Lines to Cover | 469 |
+| Conditions Set | None |
+
+Test coverage was successfully reported to SonarQube. The project covers 74.4% of the codebase, which meets the quality gate coverage threshold.
+
+
+#### 6. Duplications
+
+| Metric | Value |
+|--------|-------|
+| Duplication | 0.0% |
+| Lines Analyzed | 6,900 |
+| Conditions Set | None |
+
+No code duplication was detected across the analyzed codebase.
+
+
+#### 7. Security Hotspots
+
+| Count |
+|-------|
+| 2 |
+
+Two security hotspots were identified. These are not confirmed vulnerabilities but areas that require manual review to determine whether they pose an actual security risk.
+
+
+#### 8. Summary
+
+| Category | Result | Rating |
+|----------|--------|--------|
+| Quality Gate | Passed | ✅ |
+| Security | 0 issues | **A** |
+| Reliability | 0 issues | **A** |
+| Maintainability | 14 issues (Minor) | **A** |
+| Coverage | 74.4% | — |
+| Duplications | 0.0% | — |
+| Security Hotspots | 2 (review required) | — |
+
+Overall, the handover codebase demonstrates a **good code quality**. It successfully passes the Quality Gate with 74.4% test coverage, zero security vulnerabilities, and zero reliability bugs. The only issues present are 14 minor maintainability code smells, all of which are low effort to resolve. The two security hotspots should be reviewed manually to confirm whether any action is required.

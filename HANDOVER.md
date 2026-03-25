@@ -133,21 +133,48 @@ The following information was necessary to set up and run the project:
 5. Run `npm install` then `npm start`
 6. All tables and seed data are created automatically on first startup
 
-### c. Code Quality (SonarQube/SonarCloud Results)
+---
 
-Based on the original team's D4 Quality Report and our own review:
+### c. Code Quality: SonarQube Cloud
 
-| Metric | Result |
-|---|---|
-| Quality Gate | ✅ Passed |
-| Security Issues | 0 (A Rating) |
-| Reliability Issues | 0 (A Rating) |
-| Maintainability Issues | 14 (A Rating) — minor code smells only |
-| Code Duplication | 0.0% |
-| Test Coverage (Lines) | 76.51% |
-| Total Tests | 77 passing |
-| npm audit vulnerabilities | 0 |
+#### 1. Executive Summary
+The current state of the project indicates a significant increase in technical debt and security risks compared to the legacy reports. While the previous team maintained a "Passed" Quality Gate with zero security vulnerabilities and the introduction of a **high-severity security issue**.
 
-The 14 maintainability issues are low-severity code smells (e.g., prefer `globalThis` over `window` for ES2020 portability). No bugs, vulnerabilities, or blocking issues were found. The project has strong test coverage across authentication, booking, payment, employee, and manager routes (TC-001 through TC-069).
+##### Original SonarQube result
+<img width="1438" height="811" alt="sonar_summary" src="https://github.com/user-attachments/assets/acdf632f-0a2c-4740-b180-c346e2004405" />
+<img width="1438" height="811" alt="sonar_issues" src="https://github.com/user-attachments/assets/6544abb9-280d-4ea9-bdbe-4c086c206d63" />
 
-Overall the codebase is well-structured, readable, and maintainable. The separation of concerns between `server.js`, `lib/auth.js`, `lib/crypto.js`, and `lib/expiry.js` makes the code easy to understand and extend.
+##### Handover SonarQube result (latest)
+<img width="1440" height="812" alt="Screenshot 2569-03-25 at 20 58 53" src="https://github.com/user-attachments/assets/1ec85b0c-73bd-4fae-b51e-ba421a33ef37" />
+<img width="1440" height="812" alt="Screenshot 2569-03-25 at 20 59 24" src="https://github.com/user-attachments/assets/9d3591e8-9990-429a-b022-ecdbb46ec49e" />
+
+
+
+
+#### 2. Comparison of Metrics
+The discrepancy in the **Lines of Code (LOC)** confirms that the handover version is much larger than the version captured in the legacy screenshots, suggesting the previous team documented the project in an incomplete or early state.
+
+| Metric                  | Legacy Report (Old Team) | Current Handover (Latest Run) | Status             |
+|-------------------------|-------------------------|-------------------------------|------------------|
+| Lines of Code (LOC)      | 992                     | 6,200                         | Significant Increase |
+| Security Issues          | 0 (Rating A)            | 1 (Rating D)                  | Regression        |
+| Reliability Issues       | 0 (Rating A)            | 17 (Rating A)                 | Regression        |
+| Maintainability          | 14 (Rating A)           | 73 (Rating A)                 | Regression        |
+| Code Coverage            | 74.7%                   | 0.0%                          | Critical Drop     |
+| Duplications             | 0.0%                    | 0.3%                          | Slight Increase   |
+
+
+#### 3. Key Findings & Risks
+
+- **Project Scale Discrepancy:**  
+  The codebase has grown from ~1k LOC to 6.2k LOC. This indicates that the legacy screenshots represent an early development phase and do not reflect the full scope of the project being handed over.
+
+- **Security Vulnerability:**  
+  A new **High-Severity Security Issue** has been introduced (rated 'D'). Specifically, the "Issues" view highlights a vulnerability regarding the use of **insecure modes and padding schemes** in cryptographic implementations (`crypto.test.js`), which poses a risk to data integrity.
+
+- **Increased Technical Debt:**  
+  Maintainability issues have jumped from 14 to 73. While the rating remains an 'A', the sheer volume of **"Code Smells"** (e.g., preferring `node:crypto` over `crypto` or `globalThis` over `window`) will require significant cleanup effort.
+  
+
+#### 4. Conclusion
+The code quality of the handover project is currently **sub-optimal** and carries **high risk**. The presence of a high-severity security vulnerability is the most critical item that need to be addressed before the project can be considered **production-ready or stable**.

@@ -73,6 +73,7 @@ jobs:
           projectBaseDir: implementations
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
 
   # ─────────────────────────────────────
   # CD — Push to GHCR & Deploy to Render

@@ -11,9 +11,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ─────────────────────────────────────
+  # ────────────────────────────────────
   # CI — Lint, Test & Build Docker Image
-  # ─────────────────────────────────────
+  # ────────────────────────────────────
   ci:
     name: CI — Lint & Build
     runs-on: ubuntu-latest

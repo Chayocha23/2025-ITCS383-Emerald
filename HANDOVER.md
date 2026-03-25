@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Features of the Received Project
+## D2.1: Features of the Received Project
 
 SpaceHub is a full-featured co-working space management system with three distinct user roles: Customer, Employee, and Manager.
 
@@ -151,3 +151,29 @@ Based on the original team's D4 Quality Report and our own review:
 The 14 maintainability issues are low-severity code smells (e.g., prefer `globalThis` over `window` for ES2020 portability). No bugs, vulnerabilities, or blocking issues were found. The project has strong test coverage across authentication, booking, payment, employee, and manager routes (TC-001 through TC-069).
 
 Overall the codebase is well-structured, readable, and maintainable. The separation of concerns between `server.js`, `lib/auth.js`, `lib/crypto.js`, and `lib/expiry.js` makes the code easy to understand and extend.
+
+## D2.2: Design Verification (C4 Models vs. Implementation)
+
+We have conducted a thorough audit comparing the original C4 design models with the actual source code. Below are the identified consistencies and the necessary updates to ensure the diagrams accurately reflect the final system.
+
+### 1. Consistencies (Matches)
+* **3-Tier Architecture:** The implementation strictly adheres to the **Level 2 Container Diagram**, separating the Web Application, Node.js API, and Neon PostgreSQL Database.
+* **Role-Based Access Control (RBAC):** The `requireRole` middleware in `lib/auth.js` perfectly matches the three-actor permission model (Customer, Employee, Manager) defined in the Use Case and Component diagrams.
+* **Database Integration:** The system uses **Neon Serverless PostgreSQL** as the primary data store, with appropriate indexing for revenue and booking queries as designed.
+
+### 2. Inconsistencies & Necessary Updates
+Our code audit revealed several areas where the implementation evolved beyond the initial design specifications.
+
+| Component | Initial Design (Emerald_D1_Design.md) | Actual Implementation (Source Code) |
+| :--- | :--- | :--- |
+| **Encryption Algorithm** | AES-256-CBC | **AES-256-GCM** for primary encryption, with **AES-256-CBC** as a fallback for legacy data. |
+| **Booking Expiry** | Business Logic Requirement | Implemented as a dedicated **Background Job** in `lib/expiry.js` running every 60 seconds. |
+| **CCTV Monitoring** | Direct External System Integration | **Stub API** implementation that returns simulated JSON camera status. |
+
+### 3. Summary of C4 Diagram Updates
+To ensure the documentation is technically accurate, we have updated the diagrams as follows:
+
+* **Level 2 & 3 Diagrams:** Updated the Encryption Module label from "AES-256-CBC" to **"AES-256-GCM"**. We have also added a technical note regarding **Backward Compatibility** for legacy CBC-encrypted records.
+* **Level 3 Component Diagram:** - Added a new component: **"Expiry Background Job"**. This shows the automated process that periodically updates the status of unpaid bookings in the Database.
+    - Annotated the **CCTV System** as a **"Simulated/Stub API"** to clarify that it does not currently interface with real hardware.
+* **Use Case Diagram:** Verified that the "Record Expenses" and "Check-in" use cases are fully implemented within the Employee Dashboard.

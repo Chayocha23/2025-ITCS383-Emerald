@@ -92,7 +92,7 @@ The Level 3 Component Diagram should be updated to reflect:
 
 | Layer        | Technology                          |
 |--------------|-------------------------------------|
-| Frontend     | HTML, CSS (BEM), Vanilla JavaScript <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/23a817f7-75dc-4356-b659-297782ff63d5" />|
+| Frontend     | HTML, CSS , JavaScript <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/23a817f7-75dc-4356-b659-297782ff63d5" />|
 | Backend      | Node.js 20, Express                 <img width="1378" height="748" alt="image" src="https://github.com/user-attachments/assets/ecaab725-bd21-4995-9569-bed891bddd0a" />|
 | Database     | Neon (Serverless PostgreSQL)        <img width="1356" height="498" alt="image" src="https://github.com/user-attachments/assets/852988b8-890e-4a1e-8b05-898b7c51ddde" />|
 | Encryption   | AES-256-GCM (Node.js crypto)        <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/bcca2c1b-05fb-45ee-9295-5ee999a2ad62" />|

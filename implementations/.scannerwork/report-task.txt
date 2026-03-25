@@ -4,5 +4,5 @@ serverUrl=https://sonarcloud.io
 serverVersion=8.0.0.83834
 branch=main
 dashboardUrl=https://sonarcloud.io/dashboard?id=2025-itcs383-emerald-handover_manual&branch=main&resolved=false
-ceTaskId=AZ0lJ7yCGo1vA0GLd8eU
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ0lJ7yCGo1vA0GLd8eU
+ceTaskId=AZ0lNB6FXBIQcbzFHehs
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ0lNB6FXBIQcbzFHehs

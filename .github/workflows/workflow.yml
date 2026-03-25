@@ -73,6 +73,7 @@ jobs:
           projectBaseDir: implementations
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_BRANCH_NAME: main
 
   # ─────────────────────────────────────
   # CD — Push to GHCR & Deploy to Render

@@ -92,24 +92,15 @@ The Level 3 Component Diagram should be updated to reflect:
 
 | Layer        | Technology                          |
 |--------------|-------------------------------------|
-| Frontend     | HTML, CSS (BEM), Vanilla JavaScript <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/23a817f7-75dc-4356-b659-297782ff63d5" />
-|
-| Backend      | Node.js 20, Express                 <img width="1378" height="748" alt="image" src="https://github.com/user-attachments/assets/ecaab725-bd21-4995-9569-bed891bddd0a" />
-|
-| Database     | Neon (Serverless PostgreSQL)        <img width="1356" height="498" alt="image" src="https://github.com/user-attachments/assets/852988b8-890e-4a1e-8b05-898b7c51ddde" />
-|
-| Encryption   | AES-256-GCM (Node.js crypto)        <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/bcca2c1b-05fb-45ee-9295-5ee999a2ad62" />
-|
-| Auth         | bcryptjs (password hashing)         <img width="1342" height="282" alt="image" src="https://github.com/user-attachments/assets/b2c4a3bd-7691-48de-9553-aa446e588abc" />
-|
-| Testing      | Jest, Supertest                     <img width="1062" height="242" alt="image" src="https://github.com/user-attachments/assets/d066b0fd-5375-4fb9-b541-0409009c0f27" />
-|
-| Code Quality | SonarCloud                          <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/c26549c5-94be-441e-b5fb-6a478541a9be" />
-|
-| Container    | Docker (Alpine)                     <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/7c0b4d9d-e09b-4286-af1e-c82f51931dd4" />
-|
-| Registry     | GitHub Container Registry           <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/ec91a98c-03fe-4fba-9c8c-e486a2469a12" />
-|
+| Frontend     | HTML, CSS (BEM), Vanilla JavaScript <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/23a817f7-75dc-4356-b659-297782ff63d5" />|
+| Backend      | Node.js 20, Express                 <img width="1378" height="748" alt="image" src="https://github.com/user-attachments/assets/ecaab725-bd21-4995-9569-bed891bddd0a" />|
+| Database     | Neon (Serverless PostgreSQL)        <img width="1356" height="498" alt="image" src="https://github.com/user-attachments/assets/852988b8-890e-4a1e-8b05-898b7c51ddde" />|
+| Encryption   | AES-256-GCM (Node.js crypto)        <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/bcca2c1b-05fb-45ee-9295-5ee999a2ad62" />|
+| Auth         | bcryptjs (password hashing)         <img width="1342" height="282" alt="image" src="https://github.com/user-attachments/assets/b2c4a3bd-7691-48de-9553-aa446e588abc" />|
+| Testing      | Jest, Supertest                     <img width="1062" height="242" alt="image" src="https://github.com/user-attachments/assets/d066b0fd-5375-4fb9-b541-0409009c0f27" />|
+| Code Quality | SonarCloud                          <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/c26549c5-94be-441e-b5fb-6a478541a9be" />|
+| Container    | Docker (Alpine)                     <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/7c0b4d9d-e09b-4286-af1e-c82f51931dd4" />|
+| Registry     | GitHub Container Registry           <img width="2880" height="1864" alt="image" src="https://github.com/user-attachments/assets/ec91a98c-03fe-4fba-9c8c-e486a2469a12" />|
 | CI/CD        | GitHub Actions                      |
 | Hosting      | Render                              |
 

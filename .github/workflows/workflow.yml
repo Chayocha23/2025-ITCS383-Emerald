@@ -71,6 +71,8 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v5
         with:
           projectBaseDir: implementations
+          args: >
+            -Dsonar.projectVersion=1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io

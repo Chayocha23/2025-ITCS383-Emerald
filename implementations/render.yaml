@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: coworking-space-backend
+    env: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production

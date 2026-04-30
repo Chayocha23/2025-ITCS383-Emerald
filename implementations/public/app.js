@@ -77,113 +77,70 @@ function formatDate(dateStr) {
 function initFloatingChat() {
     const toggle = document.getElementById('chatToggle');
     const chatWin = document.getElementById('chatWindow');
-    const close = document.getElementById('closeChat');
     const sendBtn = document.getElementById('sendBtn');
     const userInput = document.getElementById('userInput');
     const chatMessages = document.getElementById('chatMessages');
 
-    if (toggle && chatWin) {
-        // Toggle the chat window visibility
-        toggle.addEventListener('click', () => chatWin.classList.toggle('show'));
+    if (!toggle || !chatWin) return;
 
-        // Close chat window when clicking the 'X' button
-        if (close) {
-            close.addEventListener('click', () => chatWin.classList.remove('show'));
-        }
+    toggle.addEventListener('click', () => chatWin.classList.toggle('show'));
 
-        // Message sending logic
-        if (sendBtn && userInput) {
-            const sendMessage = () => {
-                const text = userInput.value.trim();
-                if (!text) return;
+    if (sendBtn && userInput) {
+        const sendMessage = async () => {
+            const text = userInput.value.trim();
+            if (!text) return;
 
-                // Display user's message bubble
-                const msg = document.createElement('div');
-                msg.className = 'user-message';
-                msg.innerText = text;
-                chatMessages.appendChild(msg);
+            // แสดงข้อความ User
+            appendMessage(chatMessages, text, 'user-message');
+            userInput.value = '';
 
-                // Clear input field and scroll to the latest message
-                userInput.value = '';
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+            // บอทตอบสนอง
+            setTimeout(async () => {
+                const response = await getBotResponse(text); // ✅ เรียกใช้ฟังก์ชันที่แยกไว้ข้างนอก
+                appendMessage(chatMessages, response, 'bot-message');
+            }, 1000);
+        };
 
-                // ──────────────────────────────────────────────────────────────────────────
-                // Database-Connected Chat Logic
-                // ──────────────────────────────────────────────────────────────────────────
-
-                // Database-Connected Chat Logic (Improved for Demo)
-                setTimeout(async () => {
-
-                    const botMsg = document.createElement('div');
-                    botMsg.style.cssText = "align-self: flex-start; background: white; padding: 8px 12px; border-radius: 12px 12px 12px 0; font-size: 0.85rem; box-shadow: var(--shadow-sm);";
-
-                    let responseText = "";
-                    const lowerText = text.toLowerCase();
-                    const idMatch = text.match(/BK-?([\w\d]+)/i);
-
-                    // ✅ แยกฟังก์ชันตัดสินใจของบอท (Extract Function)
-                    async function getBotResponse(text) {
-                        const lowerText = text.toLowerCase();
-                        const idMatch = text.match(/BK-?([\w\d]+)/i);
-
-                        if (idMatch) return await handleBookingBotLogic(idMatch); // Return Early
-                        if (lowerText.includes("hi") || lowerText.includes("hello")) return "Hello! I'm here to help...";
-                        if (lowerText.includes("booking") || lowerText.includes("reserve")) return "I see you're having trouble...";
-
-                        return "I'm not quite sure I understand...";
-                    }
-
-                    // ✅ แยกส่วนเช็คข้อมูลการจอง
-                    async function handleBookingBotLogic(idMatch) {
-                        const bookingIdRaw = idMatch[1].toUpperCase();
-                        const fullBookingId = idMatch[0].toUpperCase();
-
-                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) return "Invalid Booking ID format.";
-
-                        // ตรวจสอบบนหน้าจอ
-                        const allIDs = Array.from(document.querySelectorAll('.booking-card__value'))
-                            .map(el => el.innerText?.toUpperCase());
-                        if (allIDs.includes(fullBookingId)) {
-                            return `I have found your booking ${fullBookingId} on this page.`;
-                        }
-
-                        try {
-                            const res = await fetch(`/api/bookings/${bookingIdRaw}`);
-                            const data = await res.json();
-                            return (res.ok && data.booking)
-                                ? `I've checked our database. Booking ${fullBookingId} is ${data.booking.status}.`
-                                : `I'm sorry, I couldn't find Booking ID: ${fullBookingId}.`;
-                        } catch (e) {
-                            return `I found the ID ${fullBookingId}, but I can't verify it right now.`;
-                        }
-                    }
-
-                    if (lowerText.includes("hi") || lowerText.includes("hello")) {
-                        responseText = "Hello! I'm here to help. To provide the best assistance, please tell me a bit about your issue (e.g., Booking error, Payment problem).";
-                    }
-                    else if (lowerText.includes("booking") || lowerText.includes("reserve")) {
-                        responseText = "I see you're having trouble with a booking. Could you provide your Booking ID so I can check the status?";
-                    }
-                    else {
-                        responseText = "I'm not quite sure I understand. Could you please specify your problem or provide a Booking ID (e.g., BK-7)?";
-                    }
-
-                    botMsg.innerText = responseText;
-                    chatMessages.appendChild(botMsg);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 1000);
-            };
-
-            // Trigger send on button click
-            sendBtn.addEventListener('click', sendMessage);
-
-            // Trigger send on 'Enter' key press
-            userInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
-        }
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     }
 }
+
+async function getBotResponse(text) {
+    const lowerText = text.toLowerCase();
+    const idMatch = text.match(/BK-?([\w\d]+)/i);
+
+    if (idMatch) return await handleBookingBotLogic(idMatch); // Return Early
+    if (lowerText.includes("hi") || lowerText.includes("hello")) return "Hello! I'm here to help...";
+    if (lowerText.includes("booking") || lowerText.includes("reserve")) return "I see you're having trouble...";
+
+    return "I'm not quite sure I understand...";
+}
+
+
+async function handleBookingBotLogic(idMatch) {
+    const bookingIdRaw = idMatch[1].toUpperCase();
+    const fullBookingId = idMatch[0].toUpperCase();
+
+    if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) {
+        return "Invalid Booking ID format.";
+    }
+    const allIDs = Array.from(document.querySelectorAll('.booking-card__value'))
+        .map(el => el.innerText?.toUpperCase());
+    if (allIDs.includes(fullBookingId)) {
+        return `I have found your booking ${fullBookingId} on this page.`;
+    }
+
+    try {
+        const res = await fetch(`/api/bookings/${bookingIdRaw}`);
+        const data = await res.json();
+        return (res.ok && data.booking)
+            ? `I've checked our database. Booking ${fullBookingId} is ${data.booking.status}.`
+            : `I'm sorry, I couldn't find Booking ID: ${fullBookingId}.`;
+    } catch (e) {
+        return `I found the ID ${fullBookingId}, but I can't verify it right now.`;
+    }
+} 
 
 // Function to generate a random Booking ID (e.g., BK-7A92)
 function generateRandomID() {
@@ -245,6 +202,12 @@ async function syncUnreadNotifications() {
     const userData = sessionStorage.getItem('user');
     if (!userData) return;
     const user = JSON.parse(userData);
+    const userId = user.id;
+
+    if (!userId || isNaN(userId)) {
+        console.error("Security Alert: Invalid User ID");
+        return;
+    }
 
     try {
         // ยิงไปที่ Endpoint ที่เราสร้างไว้ใน server.js
@@ -292,23 +255,33 @@ async function updateNotificationSystem() {
 
 // ใน app.js แทนที่ฟังก์ชัน checkGlobalNotifications เดิมด้วยอันนี้:
 
-async function checkGlobalNotifications() {
-    const userData = sessionStorage.getItem('user');
-    if (!userData) return; // ✅ Return Early (จบงานทันทีถ้าไม่มีข้อมูล)
+async function checkUpcomingReservations(userId) {
+    if (!userId || isNaN(userId)) return; // ตรวจสอบความปลอดภัย (SSRF Fix)
 
-    const user = JSON.parse(userData);
-    try {
-        const res = await fetch(`/api/user/notifications?userId=${user.id}`);
-        const data = await res.json();
+    const bookingRes = await fetch(`/api/bookings/user/${userId}`);
+    const bookingData = await bookingRes.json();
 
-        updateNotificationBadges(data); // ✅ แยกงานอัปเดต UI ออกไป
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-        if (user.role === 'customer') {
-            await checkUpcomingReservations(user.id); // ✅ แยกงานเช็คการจอง
+    const hasUpcoming = bookingData.bookings.some(b =>
+        (b.booking_date.startsWith(todayStr) || b.booking_date.startsWith(tomorrowStr))
+        && b.status === 'confirmed'
+    );
+
+    const alertBanner = document.getElementById('upcomingAlert');
+    if (alertBanner) {
+        alertBanner.style.display = hasUpcoming ? 'flex' : 'none';
+        const upcomingText = document.getElementById('upcomingText');
+        if (upcomingText && hasUpcoming) {
+            const isTomorrow = bookingData.bookings.some(b => b.booking_date.startsWith(tomorrowStr));
+            upcomingText.innerText = isTomorrow
+                ? "Reminder: You have a reservation scheduled for tomorrow!"
+                : "You have a reservation coming up today!";
         }
-
-        handleToastAlerts(data); // ✅ แยกงานแสดงแจ้งเตือน
-    } catch (err) { /* silent error */ }
+    }
 }
 
 // ✅ ฟังก์ชันย่อยสำหรับอัปเดต Badge (Single Responsibility)
@@ -318,6 +291,46 @@ function updateNotificationBadges(data) {
         badge.innerText = data.unreadMessages;
         badge.style.display = data.unreadMessages > 0 ? 'inline-block' : 'none';
     }
+}
+
+function handleToastAlerts(data) {
+    // แจ้งเตือนเมื่อมีการ Confirm การจองใหม่
+    if (data.newlyConfirmedBookings > 0) {
+        const lastNotified = sessionStorage.getItem('last_confirmed_count');
+        if (lastNotified != data.newlyConfirmedBookings) {
+            showToast(`Your booking has been confirmed!`, 'success');
+            sessionStorage.setItem('last_confirmed_count', data.newlyConfirmedBookings);
+        }
+    }
+
+    // แจ้งเตือน Admin เมื่อมีรายการรอการยืนยัน
+    if (data.pendingActionBookings > 0) {
+        const lastPendingCount = sessionStorage.getItem('last_pending_count');
+        if (lastPendingCount != data.pendingActionBookings) {
+            showToast(`There are ${data.pendingActionBookings} bookings waiting.`, 'info');
+            sessionStorage.setItem('last_pending_count', data.pendingActionBookings);
+        }
+    }
+}
+
+async function checkGlobalNotifications() {
+    const userData = sessionStorage.getItem('user');
+    if (!userData) return;
+
+    const user = JSON.parse(userData);
+    try {
+        const res = await fetch(`/api/user/notifications?userId=${user.id}`);
+        const data = await res.json();
+
+        // ✅ เรียกใช้ฟังก์ชันย่อยที่คุณแยกออกมาแล้ว
+        updateNotificationBadges(data);
+
+        if (user.role === 'customer') {
+            await checkUpcomingReservations(user.id);
+        }
+
+        handleToastAlerts(data);
+    } catch (err) { /* silent error */ }
 }
 
 // รันทุก 5-10 วินาที

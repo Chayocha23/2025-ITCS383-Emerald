@@ -218,7 +218,7 @@
 
 ---
 
-# Test
+## Test
 
 - T1 = Auth Tests (TC-001–007)
 - T2 = Membership Tests (TC-010–020)
@@ -229,7 +229,12 @@
 - T7 = Banking Test (TC-069)
 - T8 = New Feature Tests (Support, Notification, Mobile)
 
+## Full Version
 <img width="1920" height="1080" alt="R1 (4)" src="https://github.com/user-attachments/assets/71d61142-0001-41e7-a74a-fda8541b2061" />
+
+## Only the parts affected by the changes 
+<img width="1920" height="1080" alt="traceability_effected" src="https://github.com/user-attachments/assets/3ff50a00-2421-48ec-a703-f573833c1b53" />
+
 
 ## SLOs
 
@@ -246,3 +251,7 @@
 - SLO10 = Mobile API Adapter (NEW)
 
 <img width="1920" height="1080" alt="R1 (5)" src="https://github.com/user-attachments/assets/0df9059d-cdf7-49b7-8116-018733d83213" />
+
+## Connectivity Matrix
+<img width="1920" height="1080" alt="connectivity_matrix" src="https://github.com/user-attachments/assets/36f39f33-2a66-46fa-b697-3abcf0f9ec17" />
+

@@ -31,7 +31,6 @@ In this project phase, our group was officially authorized to utilize AI Coding 
 *   **Activity**: Writing unit tests and refactoring code to ensure high maintainability and test coverage.
 *   **AI Tool**: Claude / Gemini.
 *   **Prompt Example**: "Refactor this booking logic (SLO2) to reduce complexity and write unit tests to ensure the new code test coverage exceeds 90%."
-*   **Result**: The team successfully maintained the 'Clean as you Code' standard and achieved the mandatory >90% test coverage for all new code commits.
-
+*   **Result**: AI assisted in identifying complex logic paths and generating test stubs. While the team is still working toward the mandatory >90% coverage for all new code commits, AI helped us significantly increase the coverage from our initial baseline and identify the specific modules that require further testing to meet the 'Clean as you Code' standard.
 ## 💡 Reflection on AI Usage
 *   **Strategic Assistance**: **Claude** played a vital role in bridging the gap between theoretical software evolution models and practical maintenance tasks.

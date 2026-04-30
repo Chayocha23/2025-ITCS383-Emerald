@@ -5,8 +5,21 @@
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
+
     toast.className = `toast toast--${type} show`;
-    toast.innerHTML = `${type === 'success' ? '✓' : '✕'} ${message}`;
+
+    // 1. Clear all existing content first
+    toast.textContent = '';
+
+    // 2. Create an element for the icon (100% safe since innerHTML is not used)
+    const iconSpan = document.createElement('span');
+    iconSpan.textContent = type === 'success' ? '✓ ' : '✕ ';
+    toast.appendChild(iconSpan);
+
+    // 3. Use createTextNode for the message text (100% safe)
+    const textNode = document.createTextNode(message);
+    toast.appendChild(textNode);
+    
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
         toast.classList.remove('show');

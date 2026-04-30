@@ -746,8 +746,6 @@ describe('server.js API Routes - Core Business Logic Testing', () => {
 
 });
 
-delete window.location;
-window.location = { href: '' };
 
 describe('SpaceHub Auth Utilities', () => {
     beforeEach(() => {

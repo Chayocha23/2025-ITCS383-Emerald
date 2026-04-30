@@ -28,15 +28,19 @@ function showToast(message, type = 'success') {
 
 function requireAuth(allowedRoles) {
     const userData = sessionStorage.getItem('user');
+
     if (!userData) {
-        window.location.href = 'login.html';
+        module.exports.redirect('login.html');  // ✅ เรียกจริง
         return null;
     }
+
     const user = JSON.parse(userData);
+
     if (allowedRoles && !allowedRoles.includes(user.role || 'customer')) {
-        window.location.href = 'login.html';
+        module.exports.redirect('login.html');   // ✅ ใช้เหมือนกัน
         return null;
     }
+
     return user;
 }
 
@@ -382,6 +386,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checkGlobalNotifications();
 });
 
+function redirect(url) {
+    window.location.replace(url);
+}
+
 // Add this at the end of app.js so it can be accessed by unit tests
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -392,6 +400,7 @@ if (typeof module !== 'undefined' && module.exports) {
         formatDate,
         getValidatedId,
         handleBookingBotLogic,
-        appendMessage
+        appendMessage,
+        redirect   // ✅ เพิ่มอันนี้
     };
 }

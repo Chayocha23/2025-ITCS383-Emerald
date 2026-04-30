@@ -1,12 +1,12 @@
 /**
  * @jest-environment jsdom
  */
-const { 
-    formatCurrency, 
-    getValidatedId, 
-    requireAuth, 
-    showToast, 
-    handleBookingBotLogic 
+const {
+    formatCurrency,
+    getValidatedId,
+    requireAuth,
+    showToast,
+    handleBookingBotLogic
 } = require('./app');
 
 describe('SpaceHub Utility Functions', () => {
@@ -23,48 +23,24 @@ describe('SpaceHub Utility Functions', () => {
     });
 });
 
-// auth.test.js
-describe('requireAuth', () => {
-    const originalLocation = window.location;
-
-    beforeEach(() => {
-        delete window.location;
-        window.location = { ...originalLocation, href: '' }; 
-        sessionStorage.clear();
-    });
-
-    afterAll(() => {
-        window.location = originalLocation;
-    });
-
-    test('should redirect to login if no user in session', () => {
-        requireAuth(['admin']);
-        expect(window.location.href).toBe('login.html');
-    });
-
-    test('should return user object if role matches', () => {
-        const mockUser = { id: 1, role: 'admin' };
-        sessionStorage.setItem('user', JSON.stringify(mockUser));
-        const result = requireAuth(['admin']);
-        expect(result).toEqual(mockUser);
-    });
-});
 
 // ui.test.js
 describe('showToast', () => {
+
     beforeEach(() => {
-        jest.useFakeTimers(); // ✅ เปิดใช้งาน Fake Timers[cite: 18]
+        jest.useFakeTimers();
         document.body.innerHTML = '<div id="toast"></div>';
     });
 
     afterEach(() => {
-        jest.useRealTimers(); 
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
     });
 
     test('should display toast and remove "show" class after 3.5 seconds', () => {
         showToast('Test Message', 'success');
         const toast = document.getElementById('toast');
-        
+
         expect(toast.className).toContain('toast--success');
         expect(toast.classList.contains('show')).toBe(true);
 
@@ -89,7 +65,7 @@ describe('handleBookingBotLogic', () => {
 
         const idMatch = ['BK-456', '456'];
         const result = await handleBookingBotLogic(idMatch);
-        
+
         expect(result).toContain('is confirmed');
         expect(fetch).toHaveBeenCalledWith('/api/bookings/456');
     });
@@ -98,5 +74,30 @@ describe('handleBookingBotLogic', () => {
         const idMatch = ['BK-!!!', '!!!'];
         const result = await handleBookingBotLogic(idMatch);
         expect(result).toBe('Invalid Booking ID format.');
+    });
+});
+
+const app = require('./app');
+
+describe('requireAuth', () => {
+
+    beforeEach(() => {
+        sessionStorage.clear();
+    });
+
+    test('should redirect to login if no user in session', () => {
+        const redirectSpy = jest.spyOn(app, 'redirect').mockImplementation(() => { });
+
+        app.requireAuth(['admin']);
+
+        expect(redirectSpy).toHaveBeenCalledWith('login.html');
+    });
+
+    test('should return user object if role matches', () => {
+        const mockUser = { id: 1, role: 'admin' };
+        sessionStorage.setItem('user', JSON.stringify(mockUser));
+
+        const result = app.requireAuth(['admin']);
+        expect(result).toEqual(mockUser);
     });
 });

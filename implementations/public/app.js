@@ -140,7 +140,7 @@ async function handleBookingBotLogic(idMatch) {
     } catch (e) {
         return `I found the ID ${fullBookingId}, but I can't verify it right now.`;
     }
-} 
+}
 
 // Function to generate a random Booking ID (e.g., BK-7A92)
 function generateRandomID() {
@@ -165,15 +165,22 @@ function notifyUserOfReply(ticketId) {
 
 // ในไฟล์ app.js
 async function checkNewMessages() {
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user) return;
+    const userData = sessionStorage.getItem('user');
+    if (!userData) return;
 
     try {
-        const userId = user.id;
-        if (!userId || isNaN(userId)) {
-            console.error("Invalid User ID");
+        const user = JSON.parse(userData);
+        // 1. แปลงเป็นตัวเลข Integer และฐาน 10 ให้ชัดเจน (Sanitization)
+        const userId = parseInt(user.id, 10);
+
+        // 2. ตรวจสอบด้วย Regex เพื่อให้ SonarQube มั่นใจว่าเป็นแค่ตัวเลขเท่านั้น (Validation)
+        // และเช็คว่าต้องไม่ใช่ NaN และมากกว่า 0
+        if (isNaN(userId) || userId <= 0 || !/^\d+$/.test(user.id.toString())) {
+            console.error("Security Alert: Invalid User ID format");
             return;
         }
+
+        // 3. ใช้ตัวแปรที่ผ่านการ Clean มาแล้ว (userId) ในการเรียก fetch
         const res = await fetch(`/api/user/unread-messages?userId=${userId}`);
         const data = await res.json();
 
@@ -211,7 +218,7 @@ async function syncUnreadNotifications() {
 
     try {
         // ยิงไปที่ Endpoint ที่เราสร้างไว้ใน server.js
-        const res = await fetch(`/api/user/unread-messages?userId=${user.id}`);
+        const res = await fetch(`/api/user/unread-messages?userId=${userId}`);
         const data = await res.json();
 
         const badge = document.getElementById('inboxBadge');
@@ -234,7 +241,7 @@ async function updateNotificationSystem() {
     const user = JSON.parse(userData);
 
     try {
-        const res = await fetch(`/api/user/notifications?userId=${user.id}`);
+        const res = await fetch(`/api/user/notifications?userId=${userId}`);
         const data = await res.json();
 
         // แสดงตัวเลขที่เมนู Messages
@@ -319,7 +326,7 @@ async function checkGlobalNotifications() {
 
     const user = JSON.parse(userData);
     try {
-        const res = await fetch(`/api/user/notifications?userId=${user.id}`);
+        const res = await fetch(`/api/user/notifications?userId=${userId}`);
         const data = await res.json();
 
         // ✅ เรียกใช้ฟังก์ชันย่อยที่คุณแยกออกมาแล้ว

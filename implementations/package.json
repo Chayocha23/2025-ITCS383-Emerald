@@ -11,7 +11,6 @@
     "test:watch": "jest --watch"
   },
   "jest": {
-    "testEnvironment": "jsdom",
     "coverageReporters": [
       "lcov",
       "text-summary"
@@ -26,7 +25,6 @@
   },
   "devDependencies": {
     "jest": "^30.3.0",
-    "jsdom": "^29.1.1",
     "supertest": "^7.2.2"
   }
 }

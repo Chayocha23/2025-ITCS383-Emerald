@@ -19,7 +19,7 @@ function showToast(message, type = 'success') {
     // 3. Use createTextNode for the message text (100% safe)
     const textNode = document.createTextNode(message);
     toast.appendChild(textNode);
-    
+
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
         toast.classList.remove('show');
@@ -123,6 +123,10 @@ function initFloatingChat() {
                     if (idMatch) {
                         // ดึงเฉพาะตัวเลขหรือรหัสหลัง BK มาเช็ก
                         const bookingIdRaw = idMatch[1].toUpperCase();
+                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) { 
+                            return "Invalid ID format.";
+                        }
+                        const res = await fetch(`/api/bookings/${bookingIdRaw}`);
                         const fullBookingId = idMatch[0].toUpperCase();
 
                         // 1. ลองเช็กบนหน้าจอก่อน (กรณีอยู่หน้า My Bookings)

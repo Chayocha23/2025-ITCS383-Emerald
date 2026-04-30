@@ -146,8 +146,12 @@ async function handleBookingBotLogic(idMatch) {
 function generateRandomID() {
     const chars = '0123456789ABCDEF';
     let result = 'BK-';
+
+    const array = new Uint32Array(4);
+    window.crypto.getRandomValues(array);
+
     for (let i = 0; i < 4; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+        result += chars[array[i] % chars.length];
     }
     return result;
 }

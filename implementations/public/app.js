@@ -377,3 +377,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingChat();
     checkGlobalNotifications();
 });
+
+// Add this at the end of app.js so it can be accessed by unit tests
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        showToast,
+        requireAuth,
+        handleLogout,
+        formatCurrency,
+        formatDate,
+        getValidatedId,
+        handleBookingBotLogic,
+        appendMessage
+    };
+}

@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    container_name: Emerald-web-app
     build: .
     ports:
       - "3000:3000"
@@ -10,5 +11,4 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-    # เชื่อมต่อกับไฟล์ database.sqlite ที่เพื่อน Backend ทำไว้
     restart: always

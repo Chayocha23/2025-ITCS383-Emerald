@@ -218,7 +218,7 @@
 
 ---
 
-# Test
+## Test
 
 - T1 = Auth Tests (TC-001–007)
 - T2 = Membership Tests (TC-010–020)
@@ -229,7 +229,13 @@
 - T7 = Banking Test (TC-069)
 - T8 = New Feature Tests (Support, Notification, Mobile)
 
+## Full Version
 <img width="1920" height="1080" alt="R1 (4)" src="https://github.com/user-attachments/assets/71d61142-0001-41e7-a74a-fda8541b2061" />
+
+## Only the parts affected by the changes 
+<img width="1920" height="1080" alt="traceability_effected" src="https://github.com/user-attachments/assets/3ff50a00-2421-48ec-a703-f573833c1b53" />
+
+---
 
 ## SLOs
 
@@ -246,3 +252,134 @@
 - SLO10 = Mobile API Adapter (NEW)
 
 <img width="1920" height="1080" alt="R1 (5)" src="https://github.com/user-attachments/assets/0df9059d-cdf7-49b7-8116-018733d83213" />
+
+---
+
+## Connectivity Matrix
+<img width="1920" height="1080" alt="connectivity_matrix" src="https://github.com/user-attachments/assets/36f39f33-2a66-46fa-b697-3abcf0f9ec17" />
+
+---
+
+### Which change requests are easy to apply and why?
+
+#### 1. Notification System (R21)
+
+**Impact Level:** Low–Medium  
+
+**Rationale:**  
+The Notification System can be integrated with relatively low effort due to the existing centralized API architecture (Node.js/Express), which serves as a unified entry point for business logic. The notification functionality can be implemented as an auxiliary service (e.g., `notifyUser()`) that is triggered by existing system events such as booking creation, payment completion, and membership updates.
+
+Importantly, this feature follows an **event-driven interaction model**, meaning it operates as a side-effect rather than requiring modifications to core transactional workflows. As a result, it introduces minimal disruption to existing modules and does not necessitate significant changes to the database schema.
+
+**Key Factors Supporting Ease of Implementation:**
+- High **reusability** of existing API endpoints  
+- Low **structural coupling** with core business logic  
+- Feasible implementation as a **loosely coupled service module**  
+
+#### 2. Mobile Application Support (R22)
+
+**Impact Level:** Low  
+
+**Rationale:**  
+The Mobile Application Support feature is primarily an extension of the system’s client layer rather than a modification of its internal logic. Since the backend already exposes RESTful APIs (`/api/*`), the mobile application can directly consume these endpoints without requiring substantial changes to the server-side implementation.
+
+Thus, the mobile client acts as an additional interface to the system, leveraging existing services while maintaining architectural consistency.
+
+**Key Factors Supporting Ease of Implementation:**
+- Strong **separation between frontend and backend layers**  
+- Existing **API reusability and standardization**  
+- Minimal impact on database and business logic layers  
+
+---
+
+### Which change requests are difficult to apply and why?
+
+#### 1. Customer Support System (R20)
+
+**Impact Level:** High  
+
+**Rationale:**  
+The Customer Support System introduces entirely new functional requirements that significantly extend the system’s operational scope. Unlike the Notification System, this feature requires the implementation of **stateful workflows**, including support ticket creation, status tracking, and bidirectional communication between users and support staff.
+
+Additionally, it necessitates the introduction of new data models (e.g., tickets, messages, statuses) and their integration with existing subsystems such as booking and payment. This increases both **data complexity** and **inter-module dependencies**.
+
+**Key Challenges:**
+- Introduction of **persistent, state-driven processes** (ticket lifecycle management)  
+- Requirement for **role-based interaction handling** (customer vs. employee)  
+- Need for **tight integration** with multiple existing modules (booking, payment)  
+- Additional UI and backend coordination  
+
+
+#### 2. Cross-System Feature Interaction (Notification + Support Integration)
+
+**Impact Level:** Medium–High  
+
+**Rationale:**  
+When multiple new features interact (e.g., booking events triggering notifications and potentially escalating to support requests), the system experiences an increase in **inter-module coupling** and **dependency propagation**. This leads to more complex execution paths and a higher likelihood of unintended side effects.
+
+Such interactions also complicate testing, as multiple scenarios involving chained events must be validated to ensure system correctness.
+
+**Key Challenges:**
+- Increased **coupling between functional modules**  
+- Greater **testing complexity** due to interaction scenarios  
+- Higher risk of **unexpected behavioral side effects**  
+
+---
+
+## To make the maintenance easier, what would you expect from the previous developers?
+
+To facilitate efficient implementation of new features and reduce maintenance overhead, the following practices would be expected from the original development team:
+
+
+### 1. Modular Architecture Design
+
+A well-structured system should exhibit clear **separation of concerns**, with distinct modules for authentication, booking, payment, and reporting. Minimizing tightly coupled logic (e.g., avoiding monolithic implementations within `server.js`) significantly improves extensibility.
+
+**Benefit:** Enables seamless integration of new modules such as Support and Notification with minimal refactoring.
+
+
+### 2. Comprehensive API Documentation
+
+All API endpoints should be clearly documented, including request/response formats, validation rules, and error handling mechanisms.
+
+**Benefit:** Reduces integration effort for new clients (e.g., mobile applications) and additional services.
+
+
+### 3. Database Schema Transparency
+
+The system should provide clear documentation of database structures, such as ER diagrams and entity relationships (e.g., users, bookings, payments, memberships).
+
+**Benefit:** Simplifies schema extension for new features like support ticket management.
+
+
+### 4. Robust Test Coverage
+
+Comprehensive automated testing (e.g., using Jest/Supertest) should cover both normal and edge-case scenarios.
+
+**Benefit:** Ensures safe modification and extension of existing functionality without introducing regressions.
+
+
+### 5. Reusable Middleware and Services
+
+Core functionalities such as authentication (`auth.js`) and encryption (`crypto.js`) should be implemented as reusable middleware or service modules.
+
+**Benefit:** Promotes consistency and reduces duplication when integrating new features.
+
+
+### 6. Extensible or Event-Driven Design (Preferred)
+
+An architecture supporting event hooks (e.g., “booking created”, “payment completed”) would significantly improve extensibility.
+
+**Benefit:** Facilitates seamless integration of event-based features such as notifications with minimal code changes.
+
+---
+
+## Summary
+
+In summary, the implementation difficulty of change requests varies based on their scope and architectural impact:
+
+- **Low-impact changes** (Notification System, Mobile Support) primarily extend existing interfaces and leverage current infrastructure.
+- **High-impact changes** (Customer Support System) introduce new workflows, data structures, and interdependencies.
+- System maintainability is strongly influenced by prior architectural decisions, particularly modularity, documentation quality, and test coverage.
+
+This analysis highlights the importance of designing software systems with extensibility and maintainability in mind to accommodate future evolution efficiently.

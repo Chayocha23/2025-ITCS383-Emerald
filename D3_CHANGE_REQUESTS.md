@@ -1,142 +1,162 @@
-# D3_CHANGE_REQUESTS.md
- 
-This document analyzes the features implemented during Phase 2 Part 2 and breaks them down into specific Change Requests (CR). The 8 change requests below are categorized into four types: Corrective, Adaptive, Perfective, and Preventive — covering all three required features.
- 
+# D3: Change Request Analysis
+
+This document analyzes the maintenance activities for Phase 2 Part 2. All 8 Change Requests (CR) are categorized and mapped to the **Software Lifecycle Objects (SLO)** and **Traceability Nodes** defined in the D4 Impact Analysis report to ensure architectural consistency.
+
 ---
- 
+
 ## Feature Overview
- 
+
 | Feature | Description |
 | :--- | :--- |
-| Feature 1 | Mobile Client App — Native Android application replicating all web functionalities of SpaceHub |
-| Feature 2 | Customer Support System — Support form, inbox view, and live chat widget |
-| Feature 3 | Notification System — Reminders and alerts for bookings and payments |
- 
+| **Feature 1** | Mobile Client App — Native Android application replicating all web functionalities of SpaceHub |
+| **Feature 2** | Customer Support System — Support form, inbox view, and live chat widget |
+| **Feature 3** | Notification System — Reminders and alerts for bookings and payments |
+
 ---
- 
-## 1. Corrective Maintenance
+
+## 📊 Summary Table (Mapped to D4 SLOs)
+
+| CR ID | Maintenance Type | Affected SLOs (from D4) | Priority | Severity | Current State | Time to Implement |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **CR-01** | Corrective | **SLO3, SLO9** | High | Critical | **Closed** | 0.5 person-day |
+| **CR-02** | Corrective | **SLO2** | High | Major | **Closed** | 0.5 person-day |
+| **CR-03** | Adaptive | **SLO0, SLO8, SLO10** | High | Critical | **Closed** | 1.0 person-day |
+| **CR-04** | Adaptive | **SLO10, D7** | High | Critical | **Closed** | 3.0 person-days |
+| **CR-05** | Perfective | **SLO4** | Low | Cosmetic | **Closed** | 0.5 person-day |
+| **CR-06** | Perfective | **SLO5** | Medium | Minor | **Closed** | **1.5 person-days** |
+| **CR-07** | Preventive | **SLO4** | Medium | Minor | **Closed** | 1.0 person-day |
+| **CR-08** | Preventive | **SLO8, SLO5, SLO4** | High | Major | **Closed** | **1.5 person-days** |
+
+---
+
+## 📑 Detailed Change Request Tables
+
+### 1. Corrective Maintenance
 *Focuses on fixing errors or bugs identified in the existing system.*
- 
-### CR-01: Fix Duplicate Payment Entries in Payment History
+
+#### [CR-01] Fix Duplicate Payment Entries
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 1 – Mobile Client App |
-| **Description** | The Payment History on the Dashboard displays multiple identical "Payment" entries on the same date (4/15/2026) with the same amount (฿15 appearing 5 times consecutively). This indicates the payment creation endpoint lacks idempotency protection, allowing duplicate records to be inserted from repeated submissions or retry logic. This must be fixed before the payment flow is exposed on the Android app to prevent the same bug from propagating to a new platform. |
+| **Description** | Fix the payment creation endpoint to prevent duplicate records (idempotency protection) as observed in the Payment History. |
+| **Affected SLOs** | **SLO3** (Payment Module), **SLO9** (External Integration) |
 | **Maintenance Type** | Corrective |
 | **Priority** | High |
-| **Severity** | Major |
+| **Severity** | Critical |
+| **Current State** | **Closed** (Verified via D2 Quality Check) |
 | **Time to Implement** | 0.5 person-day |
-| **Verification Method** | Unit and integration tests verifying idempotency of the payment creation endpoint; manual verification of Payment History showing no duplicates after repeated form submissions on both web and Android. |
- 
-### CR-02: Fix Booking Status Inconsistency for Same Time Slot
+| **Verification Method** | Unit and integration tests verifying idempotency; database audit. |
+
+#### [CR-02] Fix Booking Status Inconsistency
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 1 – Mobile Client App |
-| **Description** | In the My Bookings page, two bookings (BK-13 and BK-8) exist for the same time slot (Thu, Apr 16, 2026, 16:00–18:00) with conflicting statuses PENDING and EXPIRED respectively. The system does not enforce clear status transition rules, resulting in ambiguous states visible to users. The booking status lifecycle (PENDING → CONFIRMED / EXPIRED / CANCELLED) must be explicitly defined and enforced at the backend before the My Bookings screen is replicated on Android. |
+| **Description** | Explicitly define and enforce booking status lifecycle rules to resolve conflicting states (PENDING vs EXPIRED) in the same slot. |
+| **Affected SLOs** | **SLO2** (Booking Module) |
 | **Maintenance Type** | Corrective |
 | **Priority** | High |
 | **Severity** | Major |
+| **Current State** | **Closed** |
 | **Time to Implement** | 0.5 person-day |
-| **Verification Method** | Unit tests for booking status transition rules; integration tests ensuring the correct status is applied based on time and admin confirmation logic; manual verification on My Bookings page showing no conflicting statuses for the same slot. |
- 
+| **Verification Method** | Integration tests for status transition logic. |
+
 ---
- 
-## 2. Adaptive Maintenance
+
+### 2. Adaptive Maintenance
 *Focuses on adjusting the system to work in a new or changed environment.*
- 
-### CR-03: Adapt Backend Authentication for Mobile Clients
+
+#### [CR-03] Adapt Backend Authentication for Mobile Clients
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 1 – Mobile Client App |
-| **Description** | The existing backend uses session-based (cookie) authentication designed for browser clients. A native Android app cannot use browser cookies reliably. The backend must be extended to support JWT (JSON Web Token) based authentication so the Android app can authenticate and maintain sessions securely. All existing SpaceHub flows — membership (Per Day/Month/Year), desk booking, payment (Credit Card / Bank Transfer / TrueWallet), My Bookings, Support, and Dashboard — must remain fully functional on the web without disruption. |
+| **Description** | Extend the backend to support JWT-based authentication to accommodate native Android client requirements. |
+| **Affected SLOs** | **SLO0** (Authentication), **SLO8** (Security Middleware), **SLO10** (Mobile API Adapter) |
 | **Maintenance Type** | Adaptive |
 | **Priority** | High |
 | **Severity** | Critical |
+| **Current State** | **Closed** |
 | **Time to Implement** | 1.0 person-day |
-| **Verification Method** | Integration tests verifying JWT issuance, usage, and refresh on the Android client; regression tests confirming existing web session-based auth remains unbroken across all pages. |
- 
-### CR-04: Build Native Android Application
+| **Verification Method** | Regression tests confirming web session-based auth remains functional alongside JWT. |
+
+#### [CR-04] Build Native Android Application
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 1 – Mobile Client App |
-| **Description** | A new native Android application must be built to replicate all user-facing functionalities of SpaceHub: membership application and renewal (Per Day ฿15 / Per Month ฿299 / Per Year ฿2,999), desk booking with date and time slot selection (e.g., 08:00–10:00, Full Day), payment via Credit Card / Bank Transfer / TrueWallet, My Bookings view with statuses (PENDING, CONFIRMED, EXPIRED) and Cancel Booking, Dashboard with Reminder banner and Membership Status, Customer Support form and Inbox with Admin Response, and Live Chat widget. The app must connect to the adapted backend and be hosted in a separate repository linked from the main README.md. |
+| **Description** | Implement a native Android application replicating all core SpaceHub user-facing functionalities. |
+| **Affected SLOs** | **SLO10** (Mobile API Adapter), **D7** (Mobile Client) |
 | **Maintenance Type** | Adaptive |
 | **Priority** | High |
 | **Severity** | Critical |
+| **Current State** | **Closed** |
 | **Time to Implement** | 3.0 person-days |
-| **Verification Method** | Manual functional testing on Android emulator covering all feature flows; SonarQube analysis on the new Android repository; new code test coverage > 90%. |
- 
+| **Verification Method** | SonarQube analysis on the new repository; manual functional testing. |
+
 ---
- 
-## 3. Perfective Maintenance
+
+### 3. Perfective Maintenance
 *Focuses on improving performance, maintainability, or user experience.*
- 
-### CR-05: Alert Banner Visual Enhancement
+
+#### [CR-05] Alert Banner Visual Enhancement
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 3 – Notification System |
-| **Description** | The existing Dashboard Reminder banner ("Reminder: You have a reservation scheduled for tomorrow!") is static and easy to overlook. Enhance the Alert Banner with a scrolling Marquee effect and a shaking bell icon animation to better catch the user's attention for upcoming bookings. This improvement applies to the web Dashboard and should be reflected in the Android notification display as well. |
+| **Description** | Enhance the static Reminder banner with a Marquee effect and animated bell icon for better visibility. |
+| **Affected SLOs** | **SLO4** (Notification Service) |
 | **Maintenance Type** | Perfective |
 | **Priority** | Low |
 | **Severity** | Cosmetic |
+| **Current State** | **Closed** |
 | **Time to Implement** | 0.5 person-day |
-| **Verification Method** | Visual inspection of the Dashboard to verify animation smoothness and that the banner displays correctly for users with confirmed upcoming bookings. |
- 
-### CR-06: Quick Reply Support Buttons in Chat
+| **Verification Method** | Visual inspection of Dashboard UI smoothness. |
+
+#### [CR-06] Quick Reply Support Buttons in Chat
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 2 – Customer Support System |
-| **Description** | The existing Customer Support form only allows freeform text input for the Message Detail field. Implement "Quick Reply" or "Common Inquiry" shortcut buttons in the support form and Live Chat widget (e.g., "Booking Confirmation Error", "Payment Issue", "Cannot Cancel Booking") to allow users to send standard questions with a single click. This reduces friction for users who are unsure how to describe their issue, improving the support experience on both web and Android. |
+| **Description** | Implement predefined inquiry shortcut buttons to reduce user friction in the support workflow. |
+| **Affected SLOs** | **SLO5** (Customer Support Module) |
 | **Maintenance Type** | Perfective |
 | **Priority** | Medium |
 | **Severity** | Minor |
-| **Time to Implement** | 1.0 person-day |
-| **Verification Method** | Verify that clicking a quick-reply button correctly populates and sends the message with the correct category; UI testing on both web and Android. |
- 
+| **Current State** | **Closed** |
+| **Time to Implement** | **1.5 person-days** (Reflecting the high integration complexity identified in D4) |
+| **Verification Method** | User Acceptance Testing (UAT) on both web and Android platforms. |
+
 ---
- 
-## 4. Preventive Maintenance
-*Focuses on improving software to prevent future problems or make it easier to maintain.*
- 
-### CR-07: Notification Logic Refactoring
+
+### 4. Preventive Maintenance
+*Focuses on improving software to prevent future problems.*
+
+#### [CR-07] Notification Logic Refactoring
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 3 – Notification System |
-| **Description** | The notification counting, scheduling, and filtering logic (e.g., determining when to show the "reservation scheduled for tomorrow" reminder banner) is currently embedded directly in server.js alongside other backend logic. As the Notification System is expanded to cover payment status alerts and push notifications for Android, this tightly coupled logic risks becoming a source of bugs. Refactor all notification-related logic into a dedicated utility/service module to improve code maintainability and make it easier to extend notifications to new platforms. |
+| **Description** | Refactor notification logic from server.js into a dedicated utility module to reduce tight coupling. |
+| **Affected SLOs** | **SLO4** (Notification Service) |
 | **Maintenance Type** | Preventive |
 | **Priority** | Medium |
 | **Severity** | Minor |
+| **Current State** | **Closed** |
 | **Time to Implement** | 1.0 person-day |
-| **Verification Method** | Run existing unit tests to confirm no regressions in notification functionality; code review verifying the refactored module is cleanly separated from other backend logic. |
- 
-### CR-08: Global API Error Handling
+| **Verification Method** | Unit tests to confirm no regressions in existing notification triggers. |
+
+#### [CR-08] Global API Error Handling
 | Attribute | Description |
 | :--- | :--- |
 | **Associated Feature** | Feature 2 – Customer Support System |
-| **Description** | The existing frontend makes multiple API calls (e.g., POST /api/support, GET /api/support for Inbox, booking fetch) without standardized error handling. If the backend is unavailable or returns an error, the UI may crash silently or show no feedback. As new API endpoints are added for the Customer Support System and the Android app must parse all errors programmatically, implement standardized Try-Catch blocks and a unified error response schema across all API endpoints. User-friendly error messages must be displayed on the frontend when a request fails. |
+| **Description** | Standardize the error response schema and implement unified Try-Catch blocks across all modules. |
+| **Affected SLOs** | **SLO8** (Security/Middleware), **SLO5, SLO4, SLO10** |
 | **Maintenance Type** | Preventive |
 | **Priority** | High |
 | **Severity** | Major |
-| **Time to Implement** | 1.0 person-day |
-| **Verification Method** | Simulate server failures and confirm the UI remains stable and displays appropriate error alerts; API contract tests validating consistent error schema (e.g., `{ "error": { "code": "...", "message": "..." } }`) across all endpoints. |
- 
+| **Current State** | **Closed** |
+| **Time to Implement** | **1.5 person-days** (Due to the cross-system impact across multiple modules) |
+| **Verification Method** | Simulating server failures to confirm standardized JSON error responses. |
+
 ---
- 
-## Summary Table
- 
-| CR ID | Associated Feature | Maintenance Type | Priority | Severity | Time to Implement |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| CR-01 | Feature 1 – Mobile App | Corrective | High | Major | 0.5 person-day |
-| CR-02 | Feature 1 – Mobile App | Corrective | High | Major | 0.5 person-day |
-| CR-03 | Feature 1 – Mobile App | Adaptive | High | Critical | 1.0 person-day |
-| CR-04 | Feature 1 – Mobile App | Adaptive | High | Critical | 3.0 person-days |
-| CR-05 | Feature 3 – Notification | Perfective | Low | Cosmetic | 0.5 person-day |
-| CR-06 | Feature 2 – Customer Support | Perfective | Medium | Minor | 1.0 person-day |
-| CR-07 | Feature 3 – Notification | Preventive | Medium | Minor | 1.0 person-day |
-| CR-08 | Feature 2 – Customer Support | Preventive | High | Major | 1.0 person-day |
- 
+
 ### CR Type Distribution
- 
+
 | Type | Required | Actual | CRs |
 | :--- | :--- | :--- | :--- |
 | Corrective | 2 | 2 ✅ | CR-01, CR-02 |

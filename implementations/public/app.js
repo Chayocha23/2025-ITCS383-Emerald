@@ -5,8 +5,15 @@
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
+    
     toast.className = `toast toast--${type} show`;
-    toast.innerHTML = `${type === 'success' ? '✓' : '✕'} ${message}`;
+    
+    // ✅ Mixed fix: Insert the icon as HTML, but keep the message as plain text
+    toast.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span> `;
+    
+    const textNode = document.createTextNode(message);
+    toast.appendChild(textNode); // ข้อความจะถูกเพิ่มต่อท้ายไอคอนอย่างปลอดภัย
+    
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
         toast.classList.remove('show');

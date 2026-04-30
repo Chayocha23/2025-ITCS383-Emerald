@@ -302,26 +302,6 @@ function updateNotificationBadges(data) {
     }
 }
 
-function handleToastAlerts(data) {
-    // แจ้งเตือนเมื่อมีการ Confirm การจองใหม่
-    if (data.newlyConfirmedBookings > 0) {
-        const lastNotified = sessionStorage.getItem('last_confirmed_count');
-        if (lastNotified != data.newlyConfirmedBookings) {
-            showToast(`Your booking has been confirmed!`, 'success');
-            sessionStorage.setItem('last_confirmed_count', data.newlyConfirmedBookings);
-        }
-    }
-
-    // แจ้งเตือน Admin เมื่อมีรายการรอการยืนยัน
-    if (data.pendingActionBookings > 0) {
-        const lastPendingCount = sessionStorage.getItem('last_pending_count');
-        if (lastPendingCount != data.pendingActionBookings) {
-            showToast(`There are ${data.pendingActionBookings} bookings waiting.`, 'info');
-            sessionStorage.setItem('last_pending_count', data.pendingActionBookings);
-        }
-    }
-}
-
 async function checkGlobalNotifications() {
     const userData = sessionStorage.getItem('user');
     if (!userData) return;
@@ -359,6 +339,32 @@ function appendMessage(container, text, className) {
     msg.innerText = text; // ปลอดภัยจาก XSS 100%
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
+}
+
+function handleToastAlerts(data) {
+    // 1. แจ้งเตือนลูกค้าเมื่อมีการ Confirm การจองใหม่ และ Sanitize ข้อมูลก่อนลง Storage
+    if (data.newlyConfirmedBookings > 0) {
+        const lastNotified = sessionStorage.getItem('last_confirmed_count');
+        if (lastNotified != data.newlyConfirmedBookings) {
+            showToast(`Your booking has been confirmed!`, 'success');
+            const countToStore = Number(data.newlyConfirmedBookings);
+            if (!isNaN(countToStore)) {
+                sessionStorage.setItem('last_confirmed_count', countToStore.toString());
+            }
+        }
+    }
+
+    // 2. แจ้งเตือน Admin เมื่อมีรายการรอการยืนยัน
+    if (data.pendingActionBookings > 0) {
+        const lastPendingCount = sessionStorage.getItem('last_pending_count');
+        if (lastPendingCount != data.pendingActionBookings) {
+            showToast(`There are ${data.pendingActionBookings} bookings waiting.`, 'info');
+            const pendingToStore = Number(data.pendingActionBookings);
+            if (!isNaN(pendingToStore)) {
+                sessionStorage.setItem('last_pending_count', pendingToStore.toString());
+            }
+        }
+    }
 }
 
 // รันทุก 5-10 วินาที

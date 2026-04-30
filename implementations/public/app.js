@@ -123,11 +123,15 @@ function initFloatingChat() {
                     if (idMatch) {
                         // ดึงเฉพาะตัวเลขหรือรหัสหลัง BK มาเช็ก
                         const bookingIdRaw = idMatch[1].toUpperCase();
-                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) { 
-                            return "Invalid ID format.";
+
+                        // ✅ ใช้ Regex เดียวเช็คให้ชัวร์ (ตัวอักษรหรือตัวเลขเท่านั้น)
+                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) {
+                            console.error("Invalid Booking ID format");
+                            return;
                         }
-                        const res = await fetch(`/api/bookings/${bookingIdRaw}`);
+
                         const fullBookingId = idMatch[0].toUpperCase();
+                        const res = await fetch(`/api/bookings/${bookingIdRaw}`);
 
                         // 1. ลองเช็กบนหน้าจอก่อน (กรณีอยู่หน้า My Bookings)
                         const allIDsOnScreen = Array.from(document.querySelectorAll('.booking-card__value'))
@@ -208,7 +212,12 @@ async function checkNewMessages() {
     if (!user) return;
 
     try {
-        const res = await fetch(`/api/user/unread-messages?userId=${user.id}`);
+        const userId = user.id;
+        if (!userId || isNaN(userId)) {
+            console.error("Invalid User ID");
+            return;
+        }
+        const res = await fetch(`/api/user/unread-messages?userId=${userId}`);
         const data = await res.json();
 
         const badge = document.getElementById('notiBadge');
@@ -303,37 +312,33 @@ async function checkGlobalNotifications() {
         // ค้นหาส่วน Logic ที่เราเช็ควันที่เดิม แล้วแทนที่ด้วยชุดนี้ครับ:
 
         if (user.role === 'customer') {
-            const bookingRes = await fetch(`/api/bookings/user/${user.id}`);
-            const bookingData = await bookingRes.json();
+            const userId = user.id;
+            if (userId && !isNaN(userId)) {
+                // ✅ ต้องเพิ่มบรรทัด fetch จริงๆ เข้าไปก่อน
+                const bookingRes = await fetch(`/api/bookings/user/${userId}`);
+                const bookingData = await bookingRes.json();
 
-            // 1. หาวันพรุ่งนี้ (Tomorrow)
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                const todayStr = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-            // 2. หาวันนี้ (Today) สำหรับเผื่อกรณีอยากให้โชว์ทั้งวันนี้และวันพรุ่งนี้
-            const todayStr = new Date().toISOString().split('T')[0];
+                const hasUpcoming = bookingData.bookings.some(b =>
+                    (b.booking_date.startsWith(todayStr) || b.booking_date.startsWith(tomorrowStr))
+                    && b.status === 'confirmed'
+                );
 
-            // 3. เช็คว่ามีการจองที่ตรงกับ "วันนี้" หรือ "วันพรุ่งนี้" หรือไม่
-            const hasUpcoming = bookingData.bookings.some(b =>
-                (b.booking_date.startsWith(todayStr) || b.booking_date.startsWith(tomorrowStr))
-                && b.status === 'confirmed'
-            );
-
-            const alertBanner = document.getElementById('upcomingAlert');
-            if (alertBanner) {
-                if (hasUpcoming) {
-                    alertBanner.style.display = 'flex';
+                // ✅ ปีกกาปิดต้องอยู่หลังใช้งาน hasUpcoming เสร็จแล้ว
+                const alertBanner = document.getElementById('upcomingAlert');
+                if (alertBanner) {
+                    alertBanner.style.display = hasUpcoming ? 'flex' : 'none';
                     const upcomingText = document.getElementById('upcomingText');
-                    if (upcomingText) {
-                        // ต้องมั่นใจว่ามีการใส่ข้อความลงไปตรงนี้
+                    if (upcomingText && hasUpcoming) {
                         const isTomorrow = bookingData.bookings.some(b => b.booking_date.startsWith(tomorrowStr));
                         upcomingText.innerText = isTomorrow
                             ? "Reminder: You have a reservation scheduled for tomorrow!"
                             : "You have a reservation coming up today!";
                     }
-                } else {
-                    alertBanner.style.display = 'none';
                 }
             }
         }

@@ -113,6 +113,7 @@ function initFloatingChat() {
 
                 // Database-Connected Chat Logic (Improved for Demo)
                 setTimeout(async () => {
+
                     const botMsg = document.createElement('div');
                     botMsg.style.cssText = "align-self: flex-start; background: white; padding: 8px 12px; border-radius: 12px 12px 12px 0; font-size: 0.85rem; box-shadow: var(--shadow-sm);";
 
@@ -120,45 +121,44 @@ function initFloatingChat() {
                     const lowerText = text.toLowerCase();
                     const idMatch = text.match(/BK-?([\w\d]+)/i);
 
-                    if (idMatch) {
-                        // ดึงเฉพาะตัวเลขหรือรหัสหลัง BK มาเช็ก
-                        const bookingIdRaw = idMatch[1].toUpperCase();
+                    // ✅ แยกฟังก์ชันตัดสินใจของบอท (Extract Function)
+                    async function getBotResponse(text) {
+                        const lowerText = text.toLowerCase();
+                        const idMatch = text.match(/BK-?([\w\d]+)/i);
 
-                        // ✅ ใช้ Regex เดียวเช็คให้ชัวร์ (ตัวอักษรหรือตัวเลขเท่านั้น)
-                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) {
-                            console.error("Invalid Booking ID format");
-                            return;
+                        if (idMatch) return await handleBookingBotLogic(idMatch); // Return Early
+                        if (lowerText.includes("hi") || lowerText.includes("hello")) return "Hello! I'm here to help...";
+                        if (lowerText.includes("booking") || lowerText.includes("reserve")) return "I see you're having trouble...";
+
+                        return "I'm not quite sure I understand...";
+                    }
+
+                    // ✅ แยกส่วนเช็คข้อมูลการจอง
+                    async function handleBookingBotLogic(idMatch) {
+                        const bookingIdRaw = idMatch[1].toUpperCase();
+                        const fullBookingId = idMatch[0].toUpperCase();
+
+                        if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) return "Invalid Booking ID format.";
+
+                        // ตรวจสอบบนหน้าจอ
+                        const allIDs = Array.from(document.querySelectorAll('.booking-card__value'))
+                            .map(el => el.innerText?.toUpperCase());
+                        if (allIDs.includes(fullBookingId)) {
+                            return `I have found your booking ${fullBookingId} on this page.`;
                         }
 
-                        const fullBookingId = idMatch[0].toUpperCase();
-                        const res = await fetch(`/api/bookings/${bookingIdRaw}`);
-
-                        // 1. ลองเช็กบนหน้าจอก่อน (กรณีอยู่หน้า My Bookings)
-                        const allIDsOnScreen = Array.from(document.querySelectorAll('.booking-card__value'))
-                            .map(el => el.innerText.toUpperCase());
-                        const isFoundOnScreen = allIDsOnScreen.some(val => val.includes(fullBookingId));
-
-                        if (isFoundOnScreen) {
-                            responseText = `I have found your booking ${fullBookingId} on this page. It's currently being processed.`;
-                        } else {
-                            // 2. ถ้าไม่เจอในหน้าปัจจุบัน (เช่น อยู่หน้า Dashboard) ให้ไปถาม Database จริง
-                            try {
-                                // ส่งไปเช็กที่ API ของ Backend (ใช้ idMatch[1] เพื่อส่งเฉพาะตัวเลขรหัส)
-                                const res = await fetch(`/api/bookings/${bookingIdRaw}`);
-                                const data = await res.json();
-
-                                if (res.ok && (data.exists || data.booking)) {
-                                    responseText = `I've checked our database. Booking ${fullBookingId} is valid and currently ${data.booking?.status || 'active'}. How can I help you with this?`;
-                                } else {
-                                    responseText = `I'm sorry, I couldn't find Booking ID: ${fullBookingId} in our records. Please check your ID again.`;
-                                }
-                            } catch (error) {
-                                // กรณีติดต่อ Backend ไม่ได้ ให้ตอบสุภาพไว้ก่อน
-                                responseText = `I found the ID ${fullBookingId}, but I can't verify it right now. Please try again in the My Bookings page.`;
-                            }
+                        try {
+                            const res = await fetch(`/api/bookings/${bookingIdRaw}`);
+                            const data = await res.json();
+                            return (res.ok && data.booking)
+                                ? `I've checked our database. Booking ${fullBookingId} is ${data.booking.status}.`
+                                : `I'm sorry, I couldn't find Booking ID: ${fullBookingId}.`;
+                        } catch (e) {
+                            return `I found the ID ${fullBookingId}, but I can't verify it right now.`;
                         }
                     }
-                    else if (lowerText.includes("hi") || lowerText.includes("hello")) {
+
+                    if (lowerText.includes("hi") || lowerText.includes("hello")) {
                         responseText = "Hello! I'm here to help. To provide the best assistance, please tell me a bit about your issue (e.g., Booking error, Payment problem).";
                     }
                     else if (lowerText.includes("booking") || lowerText.includes("reserve")) {
@@ -294,78 +294,30 @@ async function updateNotificationSystem() {
 
 async function checkGlobalNotifications() {
     const userData = sessionStorage.getItem('user');
-    if (!userData) return;
-    const user = JSON.parse(userData);
+    if (!userData) return; // ✅ Return Early (จบงานทันทีถ้าไม่มีข้อมูล)
 
+    const user = JSON.parse(userData);
     try {
         const res = await fetch(`/api/user/notifications?userId=${user.id}`);
         const data = await res.json();
 
-        // 1. อัปเดตตัวเลข Badge ที่เมนู Messages
-        const badge = document.getElementById('inboxBadge');
-        if (badge) {
-            badge.innerText = data.unreadMessages;
-            badge.style.display = data.unreadMessages > 0 ? 'inline-block' : 'none';
-        }
-
-        // 2. [เพิ่มใหม่] เช็คการจองของวันนี้ (Upcoming Today) สำหรับ User
-        // ค้นหาส่วน Logic ที่เราเช็ควันที่เดิม แล้วแทนที่ด้วยชุดนี้ครับ:
+        updateNotificationBadges(data); // ✅ แยกงานอัปเดต UI ออกไป
 
         if (user.role === 'customer') {
-            const userId = user.id;
-            if (userId && !isNaN(userId)) {
-                // ✅ ต้องเพิ่มบรรทัด fetch จริงๆ เข้าไปก่อน
-                const bookingRes = await fetch(`/api/bookings/user/${userId}`);
-                const bookingData = await bookingRes.json();
-
-                const todayStr = new Date().toISOString().split('T')[0];
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-                const hasUpcoming = bookingData.bookings.some(b =>
-                    (b.booking_date.startsWith(todayStr) || b.booking_date.startsWith(tomorrowStr))
-                    && b.status === 'confirmed'
-                );
-
-                // ✅ ปีกกาปิดต้องอยู่หลังใช้งาน hasUpcoming เสร็จแล้ว
-                const alertBanner = document.getElementById('upcomingAlert');
-                if (alertBanner) {
-                    alertBanner.style.display = hasUpcoming ? 'flex' : 'none';
-                    const upcomingText = document.getElementById('upcomingText');
-                    if (upcomingText && hasUpcoming) {
-                        const isTomorrow = bookingData.bookings.some(b => b.booking_date.startsWith(tomorrowStr));
-                        upcomingText.innerText = isTomorrow
-                            ? "Reminder: You have a reservation scheduled for tomorrow!"
-                            : "You have a reservation coming up today!";
-                    }
-                }
-            }
+            await checkUpcomingReservations(user.id); // ✅ แยกงานเช็คการจอง
         }
 
-        // 3. Logic การแจ้งเตือนแบบ Toast (เด้งเตือน)
-
-        // กรณีเป็น User: แจ้งเมื่อมีการ Confirm การจองใหม่
-        if (data.newlyConfirmedBookings > 0) {
-            const lastNotified = sessionStorage.getItem('last_confirmed_count');
-            if (lastNotified != data.newlyConfirmedBookings) {
-                showToast(`Your booking has been confirmed!`, 'success');
-                sessionStorage.setItem('last_confirmed_count', data.newlyConfirmedBookings);
-                if (typeof loadBookings === 'function') loadBookings();
-            }
-        }
-
-        // กรณีเป็น Admin/Employee: แจ้งเมื่อมีรายการ Pending รออยู่
-        if (data.pendingActionBookings > 0) {
-            const lastPendingCount = sessionStorage.getItem('last_pending_count');
-            if (lastPendingCount != data.pendingActionBookings) {
-                showToast(`There are ${data.pendingActionBookings} bookings waiting for confirmation.`, 'info');
-                sessionStorage.setItem('last_pending_count', data.pendingActionBookings);
-                if (typeof loadReservations === 'function') loadReservations();
-            }
-        }
-
+        handleToastAlerts(data); // ✅ แยกงานแสดงแจ้งเตือน
     } catch (err) { /* silent error */ }
+}
+
+// ✅ ฟังก์ชันย่อยสำหรับอัปเดต Badge (Single Responsibility)
+function updateNotificationBadges(data) {
+    const badge = document.getElementById('inboxBadge');
+    if (badge) {
+        badge.innerText = data.unreadMessages;
+        badge.style.display = data.unreadMessages > 0 ? 'inline-block' : 'none';
+    }
 }
 
 // รันทุก 5-10 วินาที

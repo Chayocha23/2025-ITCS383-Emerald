@@ -5,23 +5,23 @@
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    
+
     toast.className = `toast toast--${type} show`;
-    
+
     // 1. Clear all existing content first
-    toast.textContent = ''; 
+    toast.textContent = '';
 
     // 2. Create an element for the icon (100% safe since innerHTML is not used)
     const iconSpan = document.createElement('span');
     iconSpan.textContent = type === 'success' ? '✓ ' : '✕ ';
-    
+
     // 3. Create a text node for the message
     const textNode = document.createTextNode(message);
-    
+
     // 4. Append both to the toast
     toast.appendChild(iconSpan);
     toast.appendChild(textNode);
-    
+
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
         toast.classList.remove('show');
@@ -135,10 +135,15 @@ function initFloatingChat() {
                         if (isFoundOnScreen) {
                             responseText = `I have found your booking ${fullBookingId} on this page. It's currently being processed.`;
                         } else {
-                            // 2. ถ้าไม่เจอในหน้าปัจจุบัน (เช่น อยู่หน้า Dashboard) ให้ไปถาม Database จริง
+
                             try {
-                                // ส่งไปเช็กที่ API ของ Backend (ใช้ idMatch[1] เพื่อส่งเฉพาะตัวเลขรหัส)
+
+                                const bookingIdRaw = idMatch[1].toUpperCase();
+                                if (!/^[A-Z0-9]+$/.test(bookingIdRaw)) {
+                                    throw new Error('Invalid Booking ID format');
+                                }
                                 const res = await fetch(`/api/bookings/${bookingIdRaw}`);
+
                                 const data = await res.json();
 
                                 if (res.ok && (data.exists || data.booking)) {
@@ -206,7 +211,12 @@ async function checkNewMessages() {
     if (!user) return;
 
     try {
-        const res = await fetch(`/api/user/unread-messages?userId=${user.id}`);
+        const userId = user.id;
+        if (isNaN(userId)) {
+            console.error("Invalid User ID");
+            return;
+        }
+        const res = await fetch(`/api/user/unread-messages?userId=${userId}`);
         const data = await res.json();
 
         const badge = document.getElementById('notiBadge');

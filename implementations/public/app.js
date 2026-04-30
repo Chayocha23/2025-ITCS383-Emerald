@@ -211,10 +211,8 @@ async function syncUnreadNotifications() {
     const user = JSON.parse(userData);
     const userId = user.id;
 
-    if (!userId || isNaN(userId)) {
-        console.error("Security Alert: Invalid User ID");
-        return;
-    }
+    const cleanId = getValidatedId(user.id); 
+    if (!cleanId) return;
 
     try {
         // ยิงไปที่ Endpoint ที่เราสร้างไว้ใน server.js
@@ -240,8 +238,10 @@ async function updateNotificationSystem() {
     if (!userData) return;
     const user = JSON.parse(userData);
 
+    const cleanId = getValidatedId(user.id);
+    if (!cleanId) return;
     try {
-        const res = await fetch(`/api/user/notifications?userId=${userId}`);
+        const res = await fetch(`/api/user/notifications?userId=${cleanId}`);
         const data = await res.json();
 
         // แสดงตัวเลขที่เมนู Messages
@@ -251,7 +251,6 @@ async function updateNotificationSystem() {
             inboxBadge.style.display = data.unreadMessages > 0 ? 'inline-flex' : 'none';
         }
 
-        // แสดงแจ้งเตือนบนหน้าจอ (Toast) ถ้ามีการอัปเดตสถานะการจอง
         if (data.unreadBookings > 0) {
             showToast(`You have ${data.confirmedBookings} confirmed booking(s)!`, 'success');
         }
@@ -326,7 +325,9 @@ async function checkGlobalNotifications() {
 
     const user = JSON.parse(userData);
     try {
-        const res = await fetch(`/api/user/notifications?userId=${userId}`);
+        const cleanId = getValidatedId(user.id); // เรียกใช้ Helper ที่คุณสร้างไว้
+        if (!cleanId) return;
+        const res = await fetch(`/api/user/notifications?userId=${cleanId}`);
         const data = await res.json();
 
         // ✅ เรียกใช้ฟังก์ชันย่อยที่คุณแยกออกมาแล้ว
@@ -338,6 +339,20 @@ async function checkGlobalNotifications() {
 
         handleToastAlerts(data);
     } catch (err) { /* silent error */ }
+}
+
+function getValidatedId(rawId) {
+    if (!rawId || !/^\d+$/.test(rawId.toString())) return null;
+    const id = parseInt(rawId, 10);
+    return id > 0 ? id : null;
+}
+
+function appendMessage(container, text, className) {
+    const msg = document.createElement('div');
+    msg.className = className;
+    msg.innerText = text; // ปลอดภัยจาก XSS 100%
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
 }
 
 // รันทุก 5-10 วินาที

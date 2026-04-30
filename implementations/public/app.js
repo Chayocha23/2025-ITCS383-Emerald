@@ -46,7 +46,7 @@ function requireAuth(allowedRoles) {
 
 function handleLogout() {
     sessionStorage.removeItem('user');
-    window.location.href = 'index.html';
+    redirect('index.html');   // ✅ ใช้แค่นี้พอ
 }
 
 function toggleProfileMenu() {
@@ -130,9 +130,9 @@ async function handleBookingBotLogic(idMatch) {
         return "Invalid Booking ID format.";
     }
     const allIDs = Array.from(document.querySelectorAll('.booking-card__value'))
-        .map(el => el.innerText?.toUpperCase());
+        .map(el => el.textContent?.toUpperCase());
     if (allIDs.includes(fullBookingId)) {
-        return `I have found your booking ${fullBookingId} on this page.`;
+        return `found your booking ${fullBookingId} on this page`;
     }
 
     try {
@@ -140,7 +140,7 @@ async function handleBookingBotLogic(idMatch) {
         const data = await res.json();
         return (res.ok && data.booking)
             ? `I've checked our database. Booking ${fullBookingId} is ${data.booking.status}.`
-            : `I'm sorry, I couldn't find Booking ID: ${fullBookingId}.`;
+            : `could not find Booking ID: ${fullBookingId}`;
     } catch (e) {
         return `I found the ID ${fullBookingId}, but I can't verify it right now.`;
     }
@@ -255,7 +255,7 @@ async function updateNotificationSystem() {
         // แสดงตัวเลขที่เมนู Messages
         const inboxBadge = document.getElementById('inboxBadge');
         if (inboxBadge) {
-            inboxBadge.innerText = data.unreadMessages;
+            inboxBadge.innerText = String(data.unreadMessages);
             inboxBadge.style.display = data.unreadMessages > 0 ? 'inline-flex' : 'none';
         }
 
@@ -305,7 +305,7 @@ async function checkUpcomingReservations(userId) {
 function updateNotificationBadges(data) {
     const badge = document.getElementById('inboxBadge');
     if (badge) {
-        badge.innerText = data.unreadMessages;
+        badge.innerText = String(data.unreadMessages); // 🔥 FIX
         badge.style.display = data.unreadMessages > 0 ? 'inline-block' : 'none';
     }
 }
@@ -376,7 +376,14 @@ function handleToastAlerts(data) {
 }
 
 // รันทุก 5-10 วินาที
-setInterval(checkGlobalNotifications, 3000);
+if (process.env.NODE_ENV !== 'test') {
+    document.addEventListener('DOMContentLoaded', () => {
+        syncUnreadNotifications();
+        setInterval(syncUnreadNotifications, 10000);
+        initFloatingChat();
+        checkGlobalNotifications();
+    });
+}
 
 // สั่งให้ทำงานเมื่อโหลดหน้าจอ และเช็คซ้ำทุก 10 วินาที (Real-time กลายๆ)
 document.addEventListener('DOMContentLoaded', () => {
@@ -387,7 +394,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function redirect(url) {
-    window.location.replace(url);
+    if (typeof window !== 'undefined') {
+        // ✅ ถ้าเป็น test → mock แทน
+        if (process.env.NODE_ENV === 'test') {
+            window.__REDIRECT_URL__ = url;
+            return;
+        }
+
+        // ✅ เฉพาะ runtime จริงเท่านั้น
+        window.location.href = url;
+    }
 }
 
 // Add this at the end of app.js so it can be accessed by unit tests
@@ -401,6 +417,10 @@ if (typeof module !== 'undefined' && module.exports) {
         getValidatedId,
         handleBookingBotLogic,
         appendMessage,
-        redirect   // ✅ เพิ่มอันนี้
+        redirect,
+        toggleProfileMenu,
+        getBotResponse,
+        updateNotificationBadges,
+        handleToastAlerts
     };
 }

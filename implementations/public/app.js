@@ -211,12 +211,12 @@ async function syncUnreadNotifications() {
     const user = JSON.parse(userData);
     const userId = user.id;
 
-    const cleanId = getValidatedId(user.id); 
+    const cleanId = getValidatedId(user.id);
     if (!cleanId) return;
 
     try {
         // ยิงไปที่ Endpoint ที่เราสร้างไว้ใน server.js
-        const res = await fetch(`/api/user/unread-messages?userId=${userId}`);
+        const res = await fetch(`/api/user/unread-messages?userId=${cleanId}`);
         const data = await res.json();
 
         const badge = document.getElementById('inboxBadge');
@@ -262,9 +262,12 @@ async function updateNotificationSystem() {
 // ใน app.js แทนที่ฟังก์ชัน checkGlobalNotifications เดิมด้วยอันนี้:
 
 async function checkUpcomingReservations(userId) {
-    if (!userId || isNaN(userId)) return; // ตรวจสอบความปลอดภัย (SSRF Fix)
+    // ✅ ใช้ Helper ตรวจสอบซ้ำเพื่อให้ SonarQube มั่นใจ 100%
+    const cleanId = getValidatedId(userId);
+    if (!cleanId) return;
 
-    const bookingRes = await fetch(`/api/bookings/user/${userId}`);
+    // ✅ ใช้ cleanId ในการสร้าง URL
+    const bookingRes = await fetch(`/api/bookings/user/${cleanId}`);
     const bookingData = await bookingRes.json();
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -324,17 +327,20 @@ async function checkGlobalNotifications() {
     if (!userData) return;
 
     const user = JSON.parse(userData);
+
+    // ✅ 1. ตรวจสอบข้อมูลก่อนนำไปใช้ (Validate Tainted Data)
+    const cleanId = getValidatedId(user.id);
+    if (!cleanId) return;
+
     try {
-        const cleanId = getValidatedId(user.id); // เรียกใช้ Helper ที่คุณสร้างไว้
-        if (!cleanId) return;
+        // ✅ 2. ใช้ cleanId ที่ผ่านการตรวจสอบแล้วใน fetch
         const res = await fetch(`/api/user/notifications?userId=${cleanId}`);
         const data = await res.json();
 
-        // ✅ เรียกใช้ฟังก์ชันย่อยที่คุณแยกออกมาแล้ว
         updateNotificationBadges(data);
 
         if (user.role === 'customer') {
-            await checkUpcomingReservations(user.id);
+            await checkUpcomingReservations(cleanId); // ส่งค่าที่ Clean แล้วไป
         }
 
         handleToastAlerts(data);

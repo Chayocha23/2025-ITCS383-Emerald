@@ -2,7 +2,7 @@
 
 ![CI/CD Pipeline](https://github.com/ICT-Mahidol/2025-ITCS383-Emerald/actions/workflows/workflow.yml/badge.svg)
 
-link for mobile application repo: https://github.com/Poschapat/2025-ITCS383-Bughair-Android
+link for mobile application repo: [https://github.com/Poschapat/2025-ITCS383-Bughair-Android](https://github.com/btk5/2025-ITCS383-Bughair-Android/tree/main)
 
 ---
 A full-featured co-working space management system with desk booking, membership management, payment processing, employee operations, and manager analytics. Built with **HTML, CSS, JavaScript**, **Node.js/Express**, and **Neon PostgreSQL**. Deployed automatically via **GitHub Actions + Docker + Render**.
